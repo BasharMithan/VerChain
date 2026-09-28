@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from enum import Enum
-
 from models.Models import NodeMetadata
 
 
@@ -15,9 +14,16 @@ class UserAPIModel(BaseModel):
 
 
 
+class CredentialAPIModel(BaseModel):
+    document: str
+    credentialID: int
+
+
+
 class IdentityAPIModel(BaseModel):
     image: str
     identityID: int
+    # metadata: DocumentMetadata
 
 
 class IssuerAPIModel(BaseModel):
@@ -27,7 +33,7 @@ class IssuerAPIModel(BaseModel):
 
 class APIRegisterationRequest(BaseModel):
     user: UserAPIModel
-    credential: IdentityAPIModel
+    credential: CredentialAPIModel
     issuer: IssuerAPIModel 
 
 class APIRegisterationResponse(BaseModel):

@@ -2,6 +2,8 @@
 from models import User, Identity, Authority
 from services.ledger import Ledger
 
+from validation.document import DocumentValidation
+
 
 class InputValidation:
     """Checks the validity of the user, credential, and issuer input values before
@@ -17,7 +19,6 @@ class InputValidation:
 
         Args:
             user (User): User
-            ledger (Ledger): Ledger
 
         Returns:
             bool: True if the national number is associated with a user.
@@ -33,7 +34,10 @@ class InputValidation:
     def credentialValidation(self, credential: Identity) -> bool:
         if self.ledger.findCredential(credential.credentialID) is not None:
             return False
-        else: return True
+
+        # DocumentValidation()
+        
+        return True
 
 
     

@@ -188,6 +188,23 @@
     color:var(--ink);
   }
   input:focus{outline:2px solid var(--wax-dim); outline-offset:0; border-color:var(--wax-dim);}
+  input[type=file]{
+    width:100%;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    font-family:var(--sans);
+    font-size:0.85rem;
+    color:var(--ink);
+  }
+  input[type=file]:focus{outline:2px solid var(--wax-dim); outline-offset:0; border-color:var(--wax-dim);}
+  .file-hint{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    color:var(--muted);
+    margin-top:5px;
+    min-height:1.1em;
+  }
   .actions{
     display:flex;
     justify-content:space-between;
@@ -337,8 +354,12 @@
         <div style="display:flex; flex-direction:column; gap:16px;">
           <fieldset>
             <legend>Credential (Identity)</legend>
-            <div class="field"><label>Identity ID</label><input required type="number" name="credential.identityID"></div>
-            <div class="field"><label>Image (URL or base64)</label><input type="text" name="credential.image" placeholder="optional"></div>
+            <div class="field"><label>Credential ID</label><input required type="number" name="credential.credentialID"></div>
+            <div class="field">
+              <label for="credentialFile">Credential</label>
+              <input type="file" id="credentialFile" name="credential.document" accept=".pdf" required>
+              <div class="file-hint" id="credentialFileHint"></div>
+            </div>
           </fieldset>
 
           <fieldset>
@@ -467,8 +488,12 @@
     const url = base() + path;
     const opts = { method, headers: {} };
     if(body !== undefined){
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = JSON.stringify(body);
+      if(body instanceof FormData){
+        opts.body = body;
+      }else{
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
     }
     const started = performance.now();
     let res, json, text;
@@ -527,6 +552,58 @@
     });
   });
 
+  // ---- credential file upload ----
+  // Mirrors settings.yml -> settings.credentials, read from
+  // Path(__file__).resolve().parents[2] / "settings.yml" on the node.
+  // Update this if that config changes (or wire it to a live /status-style
+  // endpoint later so the page never drifts from the server's actual config).
+  const CREDENTIAL_CONSTRAINTS = {
+    maxUploadSize: 5242880,          // bytes (5 MiB)
+    supportedFormats: ['.pdf'],
+  };
+
+  const credentialFileInput = document.getElementById('credentialFile');
+  const credentialFileHint = document.getElementById('credentialFileHint');
+
+  credentialFileInput.setAttribute('accept', CREDENTIAL_CONSTRAINTS.supportedFormats.join(','));
+
+  function fileExtension(name){
+    const idx = name.lastIndexOf('.');
+    return idx === -1 ? '' : name.slice(idx).toLowerCase();
+  }
+
+  function formatBytes(n){
+    return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function setFileHint(text, ok){
+    credentialFileHint.textContent = text;
+    credentialFileHint.style.color = ok ? 'var(--seal-green)' : 'var(--wax)';
+  }
+
+  credentialFileInput.addEventListener('change', () => {
+    credentialFileHint.textContent = '';
+    credentialFileHint.style.color = 'var(--muted)';
+
+    const file = credentialFileInput.files[0];
+    if(!file) return;
+
+    const ext = fileExtension(file.name);
+    if(!CREDENTIAL_CONSTRAINTS.supportedFormats.includes(ext)){
+      setFileHint(`Unsupported format "${ext || 'unknown'}" — allowed: ${CREDENTIAL_CONSTRAINTS.supportedFormats.join(', ')}`, false);
+      credentialFileInput.value = '';
+      return;
+    }
+
+    if(file.size > CREDENTIAL_CONSTRAINTS.maxUploadSize){
+      setFileHint(`File is ${formatBytes(file.size)} — max allowed is ${formatBytes(CREDENTIAL_CONSTRAINTS.maxUploadSize)}`, false);
+      credentialFileInput.value = '';
+      return;
+    }
+
+    setFileHint(`${file.name} — ${formatBytes(file.size)} — ready to submit`, true);
+  });
+
   // ---- register ----
   const registerForm = document.getElementById('registerForm');
   registerForm.addEventListener('submit', async (e) => {
@@ -534,31 +611,15 @@
     const btn = registerForm.querySelector('button.submit');
     btn.disabled = true; btn.textContent = 'Submitting…';
 
-    const raw = formToPayload(registerForm);
-    // Shape exactly like APIRegisterationRequest -> UserAPIModel / IdentityAPIModel / IssuerAPIModel
-    const payload = {
-      user: {
-        name: raw.user.name,
-        nationalNumber: raw.user.nationalNumber,
-        phone: raw.user.phone,
-        age: raw.user.age,
-        email: raw.user.email,
-        birth: raw.user.birth
-      },
-      credential: {
-        image: raw.credential.image || '',
-        identityID: raw.credential.identityID
-      },
-      issuer: {
-        name: raw.issuer.name,
-        issuerID: raw.issuer.issuerID
-      }
-    };
+    const payload = new FormData(registerForm);
 
     try{
       const outcome = await callAPI({method:'POST', path:'/register', body: payload});
       renderResult('register', outcome);
-      document.getElementById('result-register-body').textContent = JSON.stringify(outcome.data, null, 2);
+      const detail = outcome.data?.detail;
+      document.getElementById('result-register-body').textContent = detail
+        ? (typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2))
+        : JSON.stringify(outcome.data, null, 2);
     }catch(err){
       renderResult('register', {error:true, message: err.message, url: err.url});
     }finally{

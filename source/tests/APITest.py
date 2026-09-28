@@ -42,15 +42,33 @@ def apiClient(tmp_path):
 def _registerPayload(nationalNumber, identityID, issuerID, name="Alice", issuerName="JPUF"):
     return {
         "user": {"name": name, "nationalNumber": nationalNumber, "phone": 1, "age": 30, "email": "a@x.com", "birth": "1995-01-01"},
-        "credential": {"image": "", "identityID": identityID},
+        "credential": {"document": "", "credentialID": identityID},
         "issuer": {"name": issuerName, "issuerID": issuerID},
     }
+
+
+def _postRegister(client, payload, filename="credential.pdf", content=b"credential content"):
+    user = payload["user"]
+    credential = payload["credential"]
+    issuer = payload["issuer"]
+    data = {
+        "user.name": user["name"],
+        "user.nationalNumber": str(user["nationalNumber"]),
+        "user.phone": str(user["phone"]),
+        "user.age": str(user["age"]),
+        "user.email": user["email"],
+        "user.birth": user["birth"],
+        "credential.credentialID": str(credential["credentialID"]),
+        "issuer.name": issuer["name"],
+        "issuer.issuerID": str(issuer["issuerID"]),
+    }
+    return client.post("/register", data=data, files={"credential.document": (filename, content)})
 
 
 
 def test_register_success_returns_201_and_mined_block(apiClient):
     client, _ = apiClient
-    res = client.post("/register", json=_registerPayload(1001, 1, 10))
+    res = _postRegister(client, _registerPayload(1001, 1, 10))
 
     assert res.status_code == 201
     body = res.json()
@@ -63,23 +81,43 @@ def test_register_duplicate_returns_409(apiClient):
     client, _ = apiClient
     payload = _registerPayload(1002, 2, 11)
 
-    first = client.post("/register", json=payload)
+    first = _postRegister(client, payload)
     assert first.status_code == 201
 
-    second = client.post("/register", json=payload)
+    second = _postRegister(client, payload)
     assert second.status_code == 409
 
 
 def test_register_missing_field_returns_422(apiClient):
     client, _ = apiClient
-    res = client.post("/register", json={"user": {"name": "Bob"}, "credential": {}, "issuer": {}})
+    res = client.post("/register", data={"user.name": "Bob"})
     assert res.status_code == 422
+
+
+def test_register_rejects_unsupported_file_format(apiClient):
+    client, _ = apiClient
+    res = _postRegister(client, _registerPayload(1003, 3, 12), filename="credential.txt")
+
+    assert res.status_code == 400
+    assert "Unsupported credential format" in res.json()["detail"]
+
+
+def test_register_stores_hash_of_content_and_extension(apiClient):
+    import hashlib
+
+    client, _ = apiClient
+    content = b"credential content"
+    res = _postRegister(client, _registerPayload(1004, 4, 13), content=content)
+
+    assert res.status_code == 201
+    expected = hashlib.sha256(content + b":.pdf").hexdigest()
+    assert res.json()["data"]["credential"]["image"] == expected
 
 
 
 def test_check_approves_registered_identity(apiClient):
     client, peer = apiClient
-    client.post("/register", json=_registerPayload(2002, 2, 20, name="Carol", issuerName="GovAuth"))
+    _postRegister(client, _registerPayload(2002, 2, 20, name="Carol", issuerName="GovAuth"))
 
     res = client.post("/check", json={
         "user": "Carol", "UserID": 2002, "credentialID": 2,
@@ -94,8 +132,8 @@ def test_check_approves_registered_identity(apiClient):
 def test_check_declines_for_mismatched_combination(apiClient):
     """Legit user, legit credential, legit issuer — but never registered together."""
     client, _ = apiClient
-    client.post("/register", json=_registerPayload(3003, 30, 300, name="Dave", issuerName="AuthX"))
-    client.post("/register", json=_registerPayload(3004, 31, 301, name="Eve", issuerName="AuthY"))
+    _postRegister(client, _registerPayload(3003, 30, 300, name="Dave", issuerName="AuthX"))
+    _postRegister(client, _registerPayload(3004, 31, 301, name="Eve", issuerName="AuthY"))
 
     res = client.post("/check", json={
         "user": "Dave", "UserID": 3003, "credentialID": 31,  # Eve's credential
@@ -118,7 +156,7 @@ def test_check_returns_error_when_identifiers_unknown(apiClient):
 
 def test_chain_returns_full_ledger_including_genesis(apiClient):
     client, fakePeer = apiClient
-    client.post("/register", json=_registerPayload(4004, 40, 400, name="Frank", issuerName="AuthZ"))
+    _postRegister(client, _registerPayload(4004, 40, 400, name="Frank", issuerName="AuthZ"))
 
     res = client.get("/chain")
     assert res.status_code == 200

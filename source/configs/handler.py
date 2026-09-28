@@ -1,7 +1,7 @@
 import yaml
+from pathlib import Path
 from typing import Any
 
-from models.constants import CONFIGURATION_FILE_PATH
 from configs.baseConfigs import Settings, defaultSettings
 
 
@@ -39,13 +39,15 @@ class ConfigurationHandler:
 
     @staticmethod
     def load() -> Settings:
-        """Reads the configuration file.
+        """Reads the configuration file, loads it's current configs,
+        applies it.
 
         Returns:
             Settings: The actual configuration file contents.
         """
 
-        with open(CONFIGURATION_FILE_PATH, "r") as configFile:
+
+        with open(defaultSettings.configurationFilePath, "r") as configFile:
             content: Any = yaml.safe_load(configFile) or {}
 
          
@@ -56,13 +58,15 @@ class ConfigurationHandler:
 
     def ensureConfigFileExists(self) -> None:
 
-        if not CONFIGURATION_FILE_PATH.exists():
+        if not defaultSettings.configurationFilePath.exists():
             self.initConfig(defaultSettings=defaultSettings)
 
 
     def initConfig(self, defaultSettings: Settings) -> None:
         
-        with open(CONFIGURATION_FILE_PATH, "w") as configFile:
+        with open(defaultSettings.configurationFilePath, "w") as configFile:
             yaml.safe_dump(data={"settings": defaultSettings.model_dump(mode="json")}, stream=configFile, sort_keys=False, allow_unicode=True)
 
 
+configs = ConfigurationHandler()
+configs.load()

@@ -1,5 +1,6 @@
 from models.APIModels import (VerificationRequest, NodeStatus,
-                                     ChainModel, APIRegisterationRequest)
+                                     ChainModel, APIRegisterationRequest,
+                                     )
 
 from pydantic_core import ValidationError
 
@@ -26,6 +27,7 @@ class APICommunication:
 
     
     def processVerificationRequest(self, verificationRequest: VerificationRequest) -> Response | APIError:
+
 
         # Looping over the local chain to locate the block that contains all the information.
         user = self.peer.ledger.findUser(verificationRequest.UserID, verificationRequest.user)
@@ -56,6 +58,7 @@ class APICommunication:
         "Takes the `RegisterationRequest` received from the API, builds the block and registers it on the chain."
 
 
+
         # Converting the data models from API models to the data models that are recognized by the network.
         try:
             user = User(
@@ -75,22 +78,22 @@ class APICommunication:
             )
 
             doc = Identity(
-                image=registerationRequest.credential.image,
-                credentialID=registerationRequest.credential.identityID,
+                image=registerationRequest.credential.document,
+                credentialID=registerationRequest.credential.credentialID,
                 CID=""
             )
 
-        except ValidationError as ve:
+        except ValidationError:
             return APIError(error = "Validation-error", message = "Input data is not valid.")
 
-        if not self.inputValidation.holderValidation(user=user):
-            return APIError(error = "Validation-Error", message = "User input is invalid")
+        # if not self.inputValidation.holderValidation(user=user):
+        #     return APIError(error = "Validation-Error", message = "User input is invalid")
 
-        if not self.inputValidation.credentialValidation(credential=doc):
-            return APIError(error = "Validation-Error", message = "Credential input is invalid")
+        # # if not self.inputValidation.credentialValidation(credential=doc):
+        # #     return APIError(error = "Validation-Error", message = "Credential input is invalid")
 
-        if not self.inputValidation.issuerValidation(issuer=issuer):
-            return APIError(error = "Validation-Error", message = "Issuer input is invalid")
+        # if not self.inputValidation.issuerValidation(issuer=issuer):
+        #     return APIError(error = "Validation-Error", message = "Issuer input is invalid")
         
 
         block = Block(
@@ -119,12 +122,12 @@ class APICommunication:
         elif isinstance(result, ValidationError):
             return APIError(error = "Validation-error", message =  "Input is invalid")
         
-        elif isinstance(result, Block):
-            return result
         
         elif isinstance(result, Exception):
             return APIError(error =  "Internal-Error", message = "Internal node error. Try again.")
 
+        elif isinstance(result, Block):
+            return result
 
 
     

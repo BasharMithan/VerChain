@@ -1,0 +1,14 @@
+settings:
+  configurationFilePath: C:\Users\Bashar\Code\Projects\Public\VerChain\settings.yml
+  difficulity: 4
+  performance: SAFE
+  ledger: {}
+  connection:
+    bootstrapPeers:
+    - - 127.0.0.1
+      - 800
+    
+  credentials:
+    maxUploadSize: 5242880
+    supportedCredentialFormats:
+    - .pdf

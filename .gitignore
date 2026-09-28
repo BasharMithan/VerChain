@@ -12,6 +12,8 @@ docs/Current Performance Analysis Report.md
 docs/Performance Report (Ledger Insert and Lookup Speed).md
 docs/VerChain-Docs
 docs/.obsidian
+docs/releases/v0.4.0-release.md
+
 
 storage/*.json
 
