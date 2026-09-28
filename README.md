@@ -5,8 +5,9 @@
 [![License](https://img.shields.io/github/license/BasharMithan/Verchain)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Last commit](https://img.shields.io/github/last-commit/BasharMithan/Verchain)](https://github.com/BasharMithan/Verchain/commits/main)
+[![GitHub Repo](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/BasharMithan/Verchain)
  
-Check the last [release (v0.3.0)](docs/v0.3.0-release.md)
+Check the last [release (v0.3.0)](docs/releases/v0.3.0-release.md)
 
 ---
 
