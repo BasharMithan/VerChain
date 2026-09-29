@@ -51,6 +51,14 @@ class Authority(BaseModel):
         return self
 
 
+
+class IdentityMetadata(BaseModel):
+    documentTitle: str | None = None
+    documentType: str | None = None
+    documentFormat: str | None = None
+    documentContentSize: int = 0
+
+
 class Identity(BaseModel):
     # user: User
     # issuer: Authority
@@ -58,10 +66,15 @@ class Identity(BaseModel):
     credentialID: int
     CID: str = ""
 
+    metadata: IdentityMetadata = IdentityMetadata()
+    
+
+
     @model_validator(mode="after")
     def __post_init__(self) -> "Identity":
         if (self.CID == ""):
             self.CID = IDGenerator.generateID(str(self.__dict__)) 
+
         return self
 
 

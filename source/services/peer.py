@@ -17,6 +17,7 @@ from errors.holderValidationErrors import ConflictingIdentityError
 from services.ledger import Ledger
 from services.network import Network
 from models.network import NetworkContext
+from configs.baseConfigs import defaultSettings
 
 from errors import (
     LedgerCorruptError, LedgerNotFoundError, InvalidChainError

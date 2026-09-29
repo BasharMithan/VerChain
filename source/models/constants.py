@@ -1,11 +1,17 @@
-from pathlib import Path
 
-DIFFICULTY = 4
+from configs.baseConfigs import defaultSettings
+
+
+# Mining
+DIFFICULTY = defaultSettings.difficulity
 TARGET = "0" * DIFFICULTY
 
+# Network
 BOOTSTRAP_NODES = [
     ("127.0.0.1", 8000)
 ]
 
 
-CONFIGURATION_FILE_PATH = Path(__file__).resolve().parents[1] / "settings.yml"
+
+
+

@@ -6,7 +6,6 @@ from models.Models import NodeMetadata, Payload
 
 from utils.nodeStorageManager import NodeStorageManager
 from utils.networkUtils import NetworkCallbacks, buildNodeInformation
-from events.eventTools import EventRegistration
 from utils.interaction import Interaction
 from models.events import InteractionContext
 from utils.blocks.blockManager import BlockManager
@@ -14,8 +13,8 @@ from utils.chain.chainSync import ChainSync
 from services.ledger import Ledger
 from models.network import NetworkContext
 from models.Models import NodeConnectionType, DiscoverMessage, Action
+from configs.baseConfigs import defaultSettings
 
-from models.constants import BOOTSTRAP_NODES
 
 
 class Network(Node):
@@ -172,7 +171,7 @@ class Network(Node):
 
 
     def bootstrapConnection(self) -> None:
-        for host, port in BOOTSTRAP_NODES:
+        for host, port in defaultSettings.connection.bootstrapPeers:
             self.connect(host=host, port=port)
 
 
