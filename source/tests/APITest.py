@@ -1,4 +1,5 @@
 import pytest
+import fitz
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -47,7 +48,7 @@ def _registerPayload(nationalNumber, identityID, issuerID, name="Alice", issuerN
     }
 
 
-def _postRegister(client, payload, filename="credential.pdf", content=b"credential content"):
+def _postRegister(client, payload, filename="credential.pdf", content=None):
     user = payload["user"]
     credential = payload["credential"]
     issuer = payload["issuer"]
@@ -62,7 +63,15 @@ def _postRegister(client, payload, filename="credential.pdf", content=b"credenti
         "issuer.name": issuer["name"],
         "issuer.issuerID": str(issuer["issuerID"]),
     }
+    if content is None:
+        content = _validPdf()
     return client.post("/register", data=data, files={"credential.document": (filename, content)})
+
+
+def _validPdf():
+    with fitz.open() as document:
+        document.new_page()
+        return document.tobytes()
 
 
 
@@ -75,6 +84,28 @@ def test_register_success_returns_201_and_mined_block(apiClient):
     assert body["index"] == 1  # genesis is index 0
     assert body["hash"].startswith("0000")
     assert body["data"]["user"]["name"] == "Alice"
+
+
+def test_register_openapi_uses_multipart_form(apiClient):
+    client, _ = apiClient
+    openapi = client.get("/openapi.json").json()
+
+    request_body = openapi["paths"]["/register"]["post"]["requestBody"]
+    form_schema = request_body["content"]["multipart/form-data"]["schema"]
+    schema_name = form_schema["$ref"].rsplit("/", 1)[-1]
+    properties = openapi["components"]["schemas"][schema_name]["properties"]
+
+    assert "user.name" in properties
+    assert "credential.credentialID" in properties
+    assert properties["credential.document"]["contentMediaType"] == "application/octet-stream"
+
+
+def test_credential_constraints_reflect_server_settings(apiClient):
+    client, _ = apiClient
+    response = client.get("/credential-constraints")
+
+    assert response.status_code == 200
+    assert response.json() == {"maxUploadSize": 5 * 1024 * 1024, "supportedFormats": [".pdf"]}
 
 
 def test_register_duplicate_returns_409(apiClient):
@@ -106,12 +137,39 @@ def test_register_stores_hash_of_content_and_extension(apiClient):
     import hashlib
 
     client, _ = apiClient
-    content = b"credential content"
+    content = _validPdf()
     res = _postRegister(client, _registerPayload(1004, 4, 13), content=content)
 
     assert res.status_code == 201
-    expected = hashlib.sha256(content + b":.pdf").hexdigest()
+    expected = hashlib.sha256(content + b":.pdf:4").hexdigest()
     assert res.json()["data"]["credential"]["image"] == expected
+
+
+def test_register_rejects_non_pdf_content_with_pdf_filename(apiClient):
+    client, _ = apiClient
+    response = _postRegister(
+        client,
+        _registerPayload(1005, 5, 14),
+        content=b"not a PDF",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Credential file is not a valid PDF."
+
+
+def test_registered_block_does_not_include_uploaded_filename(apiClient):
+    client, _ = apiClient
+    response = _postRegister(
+        client,
+        _registerPayload(1006, 6, 15),
+        filename="private-name.pdf",
+        content=_validPdf(),
+    )
+
+    assert response.status_code == 201
+    credential = response.json()["data"]["credential"]
+    assert credential["metadata"]["documentTitle"] == "Credential document"
+    assert "private-name.pdf" not in response.text
 
 
 

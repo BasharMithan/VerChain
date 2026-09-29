@@ -6,9 +6,9 @@ The document explains how Verchain works internally: the data model, the network
 
 ## 1. **Design goals**
 
-Verchain exists to answer oen question: "does this person own this credential?", without ever holding the credential or the person's data ifself. Three principles drive every design decision below:
+Verchain exists to answer one question: "does this person own this credential?" Registration stores the user's name, national number, phone, email, and birth in on-chain block data. Credential content is represented by a hash; the uploaded filename is not stored on-chain, and credential metadata uses a neutral document title. Three principles drive every design decision below:
 
-- **Privacy**: Raw personal data (name, national number, credential, ...) is hashed into an identifier and then discarded. Only the hash is ever written to the chain.
+- **Privacy**: Personal registration fields are visible in replicated on-chain blocks. The credential content itself is not stored; its hash is recorded instead, without the uploaded filename.
 
 - **Immutability**: once a block is mined and linked into the chain, changing it invalidates every block after it.
 

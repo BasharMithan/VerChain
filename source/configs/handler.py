@@ -53,7 +53,10 @@ class ConfigurationHandler:
          
         # The file stores the settings under the ``settings`` key, while
         # ``Settings`` validates the settings object itself.
-        return Settings.model_validate(content.get("settings", content))
+        loadedSettings = Settings.model_validate(content.get("settings", content))
+        for fieldName in Settings.model_fields:
+            setattr(defaultSettings, fieldName, getattr(loadedSettings, fieldName))
+        return defaultSettings
 
 
     def ensureConfigFileExists(self) -> None:

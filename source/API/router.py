@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from starlette.concurrency import run_in_threadpool
 from typing import Annotated
 
 from services.peer import Peer
@@ -28,31 +29,44 @@ def buildRouter(peer: Peer) -> APIRouter:
         issuerID: Annotated[int, Form(alias="issuer.issuerID")],
         document: Annotated[UploadFile, File(alias="credential.document")],
     ):
+        registerationRequest = APIRegisterationRequest.model_validate({
+            "user.name": userName,
+            "user.nationalNumber": nationalNumber,
+            "user.phone": phone,
+            "user.age": age,
+            "user.email": email,
+            "user.birth": birth,
+            "credential.credentialID": credentialID,
+            "issuer.name": issuerName,
+            "issuer.issuerID": issuerID,
+            "credential.document": document,
+        })
         try:
-            documentHash = await DocumentReceiver(credentialID, document, settings.credentials).receive()
+            documentReceiver = DocumentReceiver(settings.credentials)
+            documentHash = await documentReceiver.receive(uploadedFile=registerationRequest.document, credentialID=registerationRequest.credentialID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
 
-        payload = APIRegisterationRequest.model_validate({
-            "user": {
-                "name": userName,
-                "nationalNumber": nationalNumber,
-                "phone": phone,
-                "age": age,
-                "email": email,
-                "birth": birth,
-            },
-            "credential": {"document": documentHash, "credentialID": credentialID},
-            "issuer": {"name": issuerName, "issuerID": issuerID},
-        })
-
-        result = communication.processBlockRegisterationRequest(payload)
+        result = await run_in_threadpool(
+            communication.processBlockRegisterationRequest,
+            registerationRequest,
+            documentHash,
+        )
 
         if isinstance(result, APIError):
             raise HTTPException(status_code=409, detail=result.message)
         
         return result
+
+    @router.get("/credential-constraints")
+    def credentialConstraints():
+        return {
+            "maxUploadSize": settings.credentials.maxUploadSize,
+            "supportedFormats": sorted(
+                item.lower() for item in settings.credentials.supportedCredentialFormats
+            ),
+        }
 
     @router.post("/check")
     def check(payload: VerificationRequest):

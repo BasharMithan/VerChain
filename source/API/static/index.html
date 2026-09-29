@@ -553,19 +553,15 @@
   });
 
   // ---- credential file upload ----
-  // Mirrors settings.yml -> settings.credentials, read from
-  // Path(__file__).resolve().parents[2] / "settings.yml" on the node.
-  // Update this if that config changes (or wire it to a live /status-style
-  // endpoint later so the page never drifts from the server's actual config).
-  const CREDENTIAL_CONSTRAINTS = {
-    maxUploadSize: 5242880,          // bytes (5 MiB)
-    supportedFormats: ['.pdf'],
-  };
-
+  let credentialConstraints = null;
   const credentialFileInput = document.getElementById('credentialFile');
   const credentialFileHint = document.getElementById('credentialFileHint');
 
-  credentialFileInput.setAttribute('accept', CREDENTIAL_CONSTRAINTS.supportedFormats.join(','));
+  callAPI({method:'GET', path:'/credential-constraints'}).then(outcome => {
+    if(!outcome.ok || !outcome.data) return;
+    credentialConstraints = outcome.data;
+    credentialFileInput.setAttribute('accept', credentialConstraints.supportedFormats.join(','));
+  }).catch(() => {});
 
   function fileExtension(name){
     const idx = name.lastIndexOf('.');
@@ -589,14 +585,14 @@
     if(!file) return;
 
     const ext = fileExtension(file.name);
-    if(!CREDENTIAL_CONSTRAINTS.supportedFormats.includes(ext)){
-      setFileHint(`Unsupported format "${ext || 'unknown'}" — allowed: ${CREDENTIAL_CONSTRAINTS.supportedFormats.join(', ')}`, false);
+    if(credentialConstraints && !credentialConstraints.supportedFormats.includes(ext)){
+      setFileHint(`Unsupported format "${ext || 'unknown'}" — allowed: ${credentialConstraints.supportedFormats.join(', ')}`, false);
       credentialFileInput.value = '';
       return;
     }
 
-    if(file.size > CREDENTIAL_CONSTRAINTS.maxUploadSize){
-      setFileHint(`File is ${formatBytes(file.size)} — max allowed is ${formatBytes(CREDENTIAL_CONSTRAINTS.maxUploadSize)}`, false);
+    if(credentialConstraints && file.size > credentialConstraints.maxUploadSize){
+      setFileHint(`File is ${formatBytes(file.size)} — max allowed is ${formatBytes(credentialConstraints.maxUploadSize)}`, false);
       credentialFileInput.value = '';
       return;
     }

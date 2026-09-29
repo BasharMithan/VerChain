@@ -75,7 +75,6 @@ class Identity(BaseModel):
         if (self.CID == ""):
             self.CID = IDGenerator.generateID(str(self.__dict__)) 
 
-        self.metadata.documentFormat = '.pdf'
         return self
 
 

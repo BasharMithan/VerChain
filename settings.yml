@@ -6,8 +6,7 @@ settings:
   connection:
     bootstrapPeers:
     - - 127.0.0.1
-      - 800
-    
+      - 8000
   credentials:
     maxUploadSize: 5242880
     supportedCredentialFormats:

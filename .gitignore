@@ -13,9 +13,11 @@ docs/Performance Report (Ledger Insert and Lookup Speed).md
 docs/VerChain-Docs
 docs/.obsidian
 docs/releases/v0.4.0-release.md
+docs/full-arcitecture-guide.md
 
 
 storage/*.json
+storage/*.log
 
 source/Blockchain_based_Identity_Verification_System.egg-info
 source/*.egg-info/

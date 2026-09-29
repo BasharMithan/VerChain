@@ -24,7 +24,7 @@ class LedgerCofigs(BaseSettings):
 
 
 class ConnectionCofigs(BaseSettings):
-    bootstrapPeers: list[tuple[str, int]] = [('127.0.0.1', 800)]
+    bootstrapPeers: list[tuple[str, int]] = [('127.0.0.1', 8000)]
 
 class CredentialConstraints(BaseSettings):
     maxUploadSize: int = 5 * 1024 * 1024
