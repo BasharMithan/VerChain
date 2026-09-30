@@ -17,7 +17,6 @@ docs/full-arcitecture-guide.md
 
 
 storage/*.json
-storage/*.log
 
 source/Blockchain_based_Identity_Verification_System.egg-info
 source/*.egg-info/
