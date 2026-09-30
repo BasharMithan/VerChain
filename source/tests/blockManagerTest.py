@@ -2,7 +2,7 @@ import pytest
 
 from utils.blocks.blockManager import BlockManager
 from services.ledger import Ledger
-from errors import DuplicateBlockError
+from errors import BlockHashMismatchError, BlockNotMinedError, DuplicateBlockError
 from errors.holderValidationErrors import ConflictingIdentityError
 
 
@@ -99,6 +99,64 @@ def test_receive_duplicate_block_raises(blockManager, unminedBlock):
     duplicate = copy.deepcopy(mined)
     with pytest.raises(DuplicateBlockError):
         blockManager.receiveBlock(duplicate)
+
+
+def test_check_if_block_exists_matches_chid(blockManager, unminedBlock):
+    blockManager.registerBlock(unminedBlock)
+
+    assert blockManager.checkIfBlockExists(
+        unminedBlock.data.chid, blockManager.ledger.blocks
+    ) is True
+    assert blockManager.checkIfBlockExists("missing-chid", blockManager.ledger.blocks) is False
+
+
+def test_should_broadcast_only_once_for_each_chid(blockManager, unminedBlock):
+    assert blockManager.shouldBoradcast(unminedBlock) is True
+    assert blockManager.shouldBoradcast(unminedBlock) is False
+
+
+def test_should_broadcast_allows_a_different_chid(blockManager, unminedBlock):
+    blockManager.shouldBoradcast(unminedBlock)
+
+    from models.Models import Authority, CHID, Identity, User
+
+    other_user = User(
+        name="Other",
+        nationalNumber=2,
+        phone=2,
+        age=21,
+        email="other@bc.io",
+        birth="",
+    )
+    other_chid = CHID(
+        user=other_user,
+        credential=Identity(image="", credentialID=2),
+        issuer=Authority(name="OtherAuth", businessID=2),
+    )
+    other_block = unminedBlock.model_copy(update={"data": other_chid})
+
+    assert blockManager.shouldBoradcast(other_block) is True
+
+
+def test_receive_unmined_block_raises_and_does_not_store(blockManager, unminedBlock):
+    unminedBlock.index = 1
+    unminedBlock.previousHash = blockManager.ledger.blocks[0]["hash"]
+
+    with pytest.raises(BlockNotMinedError):
+        blockManager.receiveBlock(unminedBlock)
+
+    assert len(blockManager.ledger.blocks) == 1
+
+
+def test_receive_tampered_block_raises_and_does_not_store(blockManager, minedBlock):
+    minedBlock.index = 1
+    minedBlock.previousHash = blockManager.ledger.blocks[0]["hash"]
+    minedBlock.hash = "0" + minedBlock.hash[1:]
+
+    with pytest.raises(BlockHashMismatchError):
+        blockManager.receiveBlock(minedBlock)
+
+    assert len(blockManager.ledger.blocks) == 1
 
 
 def test_concurrent_receive_block_does_not_duplicate_same_chid(blockManager, unminedBlock, monkeypatch):

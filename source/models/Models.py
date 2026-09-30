@@ -24,7 +24,7 @@ class User(BaseModel):
     @model_validator(mode="after")
     def __post_init__(self) -> "User":
         if (self.HID == ""):
-            self.HID = IDGenerator.generateID(str(self.__dict__))
+            self.HID = IDGenerator.generateID(f"{self.name}:{self.nationalNumber}{self.birth}")
         return self
 
     class Confing:
@@ -47,7 +47,7 @@ class Authority(BaseModel):
         
 
         if (self.AUTHID == ""):
-            self.AUTHID = IDGenerator.generateID(str(self.__dict__))
+            self.AUTHID = IDGenerator.generateID(f"{self.name}:{self.businessID}")
         return self
 
 
@@ -73,7 +73,7 @@ class Identity(BaseModel):
     @model_validator(mode="after")
     def __post_init__(self) -> "Identity":
         if (self.CID == ""):
-            self.CID = IDGenerator.generateID(str(self.__dict__)) 
+            self.CID = IDGenerator.generateID(f"{self.metadata.documentTitle}:{self.credentialID}:{self.metadata.documentContentSize}") 
 
         return self
 
