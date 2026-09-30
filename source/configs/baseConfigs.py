@@ -2,6 +2,7 @@
 from enum import Enum
 from pathlib import Path
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 """
@@ -42,7 +43,10 @@ class Settings(BaseSettings):
     """
 
     
-    configurationFilePath: Path = Path(__file__).resolve().parents[2] / "settings.yml"
+    configurationFilePath: Path = Field(
+        default=Path(__file__).resolve().parents[2] / "settings.yml",
+        exclude=True
+        ) # Excluding the absulute Windows path from the settings.yml file.
 
     difficulity: int = 4
     performance: Performance = Performance.safe

@@ -91,14 +91,14 @@ class APICommunication:
         except ValidationError:
             return APIError(error = "Validation-error", message = "Input data is not valid.")
 
-        # if not self.inputValidation.holderValidation(user=user):
-        #     return APIError(error = "Validation-Error", message = "User input is invalid")
+        if not self.inputValidation.holderValidation(user=user):
+            return APIError(error = "Validation-Error", message = "User input is invalid")
 
-        # # if not self.inputValidation.credentialValidation(credential=doc):
-        # #     return APIError(error = "Validation-Error", message = "Credential input is invalid")
+        if not self.inputValidation.credentialValidation(credential=doc):
+            return APIError(error = "Validation-Error", message = "Credential input is invalid")
 
-        # if not self.inputValidation.issuerValidation(issuer=issuer):
-        #     return APIError(error = "Validation-Error", message = "Issuer input is invalid")
+        if not self.inputValidation.issuerValidation(issuer=issuer):
+            return APIError(error = "Validation-Error", message = "Issuer input is invalid")
         
 
         block = Block(

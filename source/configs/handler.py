@@ -72,4 +72,3 @@ class ConfigurationHandler:
 
 
 configs = ConfigurationHandler()
-configs.load()
