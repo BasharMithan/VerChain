@@ -14,7 +14,6 @@ docs/VerChain-Docs
 docs/.obsidian
 docs/releases/v0.4.0-release.md
 docs/full-arcitecture-guide.md
-docs/Hashing-in-Verchain.md
 
 
 storage/*.json
