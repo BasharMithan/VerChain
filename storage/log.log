@@ -1292,3 +1292,30 @@
 2026-09-30 10:49:12,594 - INFO - [Block Validation] The block 0 is valid.
 2026-09-30 10:49:12,594 - INFO - [Chain Validation] Chain is valid.
 2026-09-30 10:49:12,595 - INFO - Block with CHID {'user': {'name': 'UserH', 'nationalNumber': 701, 'phone': 1, 'age': 20, 'email': 'test@bc.io', 'birth': '', 'HID': '5f4020373e54d54e29311d11ebda67f79f026b59f38bae07546886dcd32ba88b'}, 'credential': {'image': '', 'credentialID': 8, 'CID': '60a86b7ed2c918d8e2653aff1adc1fcc24eeaac406e8e7cce05afde14bd2dfe5', 'metadata': {'documentTitle': None, 'documentType': None, 'documentFormat': None, 'documentContentSize': 0}}, 'issuer': {'name': 'AuthH', 'businessID': 70, 'AUTHID': 'f1e927ee27754d6750d703f525181a05a299dc37b87c2ec8f8c562a1827f51df'}, 'chid': '151413c6318a1799c1deb41d706851363d01f2eafa168b416b0a44edba600954'} inserted successfully. 
+2026-09-30 10:59:38,474 - INFO - [Chain Validation] Initializing the chain validator.
+2026-09-30 10:59:38,543 - INFO - [Block Validation] Validatiing the block 0.
+2026-09-30 10:59:38,543 - INFO - [Block Validation] The block 0 is valid.
+2026-09-30 10:59:38,544 - INFO - [Block Validation] Validatiing the block 1.
+2026-09-30 10:59:38,544 - INFO - [Block Validation] The block 1 is valid.
+2026-09-30 10:59:38,544 - INFO - [Block Validation] Validatiing the block 2.
+2026-09-30 10:59:38,547 - INFO - [Block Validation] The block 2 is valid.
+2026-09-30 10:59:38,547 - INFO - [Block Validation] Validatiing the block 3.
+2026-09-30 10:59:38,548 - INFO - [Block Validation] The block 3 is valid.
+2026-09-30 10:59:38,548 - INFO - [Block Validation] Validatiing the block 4.
+2026-09-30 10:59:38,548 - INFO - [Block Validation] The block 4 is valid.
+2026-09-30 10:59:38,548 - INFO - [Block Validation] Validatiing the block 5.
+2026-09-30 10:59:38,548 - INFO - [Block Validation] The block 5 is valid.
+2026-09-30 10:59:38,549 - INFO - [Block Validation] Validatiing the block 6.
+2026-09-30 10:59:38,549 - INFO - [Block Validation] The block 6 is valid.
+2026-09-30 10:59:38,549 - INFO - [Block Validation] Validatiing the block 7.
+2026-09-30 10:59:38,549 - INFO - [Block Validation] The block 7 is valid.
+2026-09-30 10:59:38,550 - INFO - [Block Validation] Validatiing the block 8.
+2026-09-30 10:59:38,550 - INFO - [Block Validation] The block 8 is valid.
+2026-09-30 10:59:38,550 - INFO - [Block Validation] Validatiing the block 9.
+2026-09-30 10:59:38,550 - INFO - [Block Validation] The block 9 is valid.
+2026-09-30 10:59:38,551 - INFO - [Block Validation] Validatiing the block 10.
+2026-09-30 10:59:38,551 - INFO - [Block Validation] The block 10 is valid.
+2026-09-30 10:59:38,551 - INFO - [Block Validation] Validatiing the block 11.
+2026-09-30 10:59:38,551 - INFO - [Block Validation] The block 11 is valid.
+2026-09-30 10:59:38,551 - INFO - [Chain Validation] Chain is valid.
+2026-09-30 10:59:38,911 - DEBUG - Using proactor: IocpProactor

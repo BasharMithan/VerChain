@@ -1,5 +1,4 @@
 settings:
-  configurationFilePath: C:\Users\Bashar\Code\Projects\Public\VerChain\settings.yml
   difficulity: 4
   performance: SAFE
   ledger: {}
