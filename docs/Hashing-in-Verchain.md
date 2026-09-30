@@ -1,5 +1,7 @@
 # Hashing
 
+These IDs structures are defined in Verchain v0.4.1 and above.
+
 This document explains how the hashing mechanism is done in Verchain. Almost each data model in Verchain must generate a hash (or take one), so hashing is the core of Verchain.
 
 ## Hashing Algorithm
@@ -49,4 +51,3 @@ This is the ID that is stored on-chain, it's a combination of all the generated 
 CHID = sha256(f"{HID}:{CID}:{AUTHID}")
 ```
 
-  These IDs structures are defined in Verchain v0.5.0 >.
