@@ -5,7 +5,7 @@ from models.APIModels import (VerificationRequest, NodeStatus,
 from pydantic_core import ValidationError
 
 from services.peer import Peer
-from models.Models import NodeMetadata, Identity, Authority, Block, CHID, Query, Response, User, IdentityMetadata
+from models.Models import NodeMetadata, Identity, Authority, Block, CHID, Query, Response, User, Document
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
 from validation.chain_validation import ChainValidation
@@ -81,9 +81,10 @@ class APICommunication:
                 image=documentHash,
                 credentialID=registerationRequest.credentialID,
 
-                metadata=IdentityMetadata(documentTitle="Credential document",
+                document=Document(documentTitle="Credential document",
                                           documentContentSize=registerationRequest.document.size or 0,
-                                          documentType=registerationRequest.document.content_type
+                                          documentType=registerationRequest.document.content_type,
+                                          documentContent=str(registerationRequest.document.read()).encode("utf-8")
                                           ),
                 CID=""
             )

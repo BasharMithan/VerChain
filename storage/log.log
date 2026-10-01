@@ -4151,3 +4151,29 @@
 2026-09-30 19:49:35,280 - INFO - [Block Validation] The block 0 is valid.
 2026-09-30 19:49:35,280 - INFO - [Chain Validation] Chain is valid.
 2026-09-30 19:49:35,283 - INFO - Block with CHID {'user': {'name': 'UserH', 'nationalNumber': 701, 'phone': 1, 'age': 20, 'email': 'test@bc.io', 'birth': '', 'HID': '26f3b458d2e17c2be2d16fdaca46f80f7612b59b8726d684709f1655c555c02d'}, 'credential': {'image': '', 'credentialID': 8, 'CID': '62338f2c1fc6ed39c5c4e05dfd10982200f021b20d4ab666b53a4fca4a31c839', 'metadata': {'documentTitle': None, 'documentType': None, 'documentFormat': None, 'documentContentSize': 0}}, 'issuer': {'name': 'AuthH', 'businessID': 70, 'AUTHID': 'aa4a28cdb35b15f03ebec096a79b1177579072d09a334d891253679a069bbe8c'}, 'chid': 'cd51fe318e8b003c28204dcd6dd5c1952283b5b461c307a48b698174fc0ebe40'} inserted successfully. 
+2026-10-01 22:34:51,465 - INFO - [Chain Validation] Initializing the chain validator.
+2026-10-01 22:34:51,508 - INFO - [Block Validation] Validatiing the block 0.
+2026-10-01 22:34:51,508 - INFO - [Block Validation] The block 0 is valid.
+2026-10-01 22:34:51,509 - INFO - [Block Validation] Validatiing the block 1.
+2026-10-01 22:34:51,509 - INFO - [Block Validation] The block 1 is valid.
+2026-10-01 22:34:51,510 - INFO - [Block Validation] Validatiing the block 2.
+2026-10-01 22:34:51,510 - INFO - [Block Validation] The block 2 is valid.
+2026-10-01 22:34:51,510 - INFO - [Block Validation] Validatiing the block 3.
+2026-10-01 22:34:51,510 - INFO - [Block Validation] The block 3 is valid.
+2026-10-01 22:34:51,511 - INFO - [Block Validation] Validatiing the block 4.
+2026-10-01 22:34:51,511 - INFO - [Block Validation] The block 4 is valid.
+2026-10-01 22:34:51,511 - INFO - [Block Validation] Validatiing the block 5.
+2026-10-01 22:34:51,511 - INFO - [Block Validation] The block 5 is valid.
+2026-10-01 22:34:51,512 - INFO - [Block Validation] Validatiing the block 6.
+2026-10-01 22:34:51,512 - INFO - [Block Validation] The block 6 is valid.
+2026-10-01 22:34:51,512 - INFO - [Block Validation] Validatiing the block 7.
+2026-10-01 22:34:51,512 - INFO - [Block Validation] The block 7 is valid.
+2026-10-01 22:34:51,513 - INFO - [Block Validation] Validatiing the block 8.
+2026-10-01 22:34:51,513 - INFO - [Block Validation] The block 8 is valid.
+2026-10-01 22:34:51,513 - INFO - [Block Validation] Validatiing the block 9.
+2026-10-01 22:34:51,514 - INFO - [Block Validation] The block 9 is valid.
+2026-10-01 22:34:51,514 - INFO - [Block Validation] Validatiing the block 10.
+2026-10-01 22:34:51,514 - INFO - [Block Validation] The block 10 is valid.
+2026-10-01 22:34:51,514 - INFO - [Block Validation] Validatiing the block 11.
+2026-10-01 22:34:51,515 - INFO - [Block Validation] The block 11 is valid.
+2026-10-01 22:34:51,515 - INFO - [Chain Validation] Chain is valid.

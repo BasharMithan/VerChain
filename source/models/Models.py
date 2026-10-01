@@ -52,11 +52,20 @@ class Authority(BaseModel):
 
 
 
-class IdentityMetadata(BaseModel):
+class Document(BaseModel):
     documentTitle: str | None = None
     documentType: str | None = None
     documentFormat: str | None = None
     documentContentSize: int = 0
+    documentContent: bytes | None = None
+    documentHash: str = ""
+
+    @model_validator(mode="after")
+    def __post_init__(self) -> "Document":
+        if self.documentHash == "":
+            self.documentHash = f"{self.documentTitle}:{self.documentContent}:{self.documentContentSize}"
+
+        return self
 
 
 class Identity(BaseModel):
@@ -66,14 +75,14 @@ class Identity(BaseModel):
     credentialID: int
     CID: str = ""
 
-    metadata: IdentityMetadata = IdentityMetadata()
+    document: Document = Document()
     
 
 
     @model_validator(mode="after")
     def __post_init__(self) -> "Identity":
         if (self.CID == ""):
-            self.CID = IDGenerator.generateID(f"{self.metadata.documentTitle}:{self.credentialID}:{self.metadata.documentContentSize}") 
+            self.CID = IDGenerator.generateID(f"{self.document.documentTitle}:{self.credentialID}:{self.document.documentContentSize}") 
 
         return self
 
