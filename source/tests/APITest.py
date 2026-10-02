@@ -1,5 +1,5 @@
 import pytest
-import fitz
+import pymupdf
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -36,7 +36,7 @@ class FakePeer:
 def apiClient(tmp_path):
     fakePeer = FakePeer("APITestNode", "127.0.0.1", 9999, tmp_path / ".ledger-api-test.json")
     app = FastAPI()
-    app.include_router(buildRouter(fakePeer))
+    app.include_router(buildRouter(fakePeer)) # type: ignore
     return TestClient(app), fakePeer
 
 
@@ -69,7 +69,7 @@ def _postRegister(client, payload, filename="credential.pdf", content=None):
 
 
 def _validPdf():
-    with fitz.open() as document:
+    with pymupdf.open() as document:
         document.new_page()
         return document.tobytes()
 
@@ -168,7 +168,7 @@ def test_registered_block_does_not_include_uploaded_filename(apiClient):
 
     assert response.status_code == 201
     credential = response.json()["data"]["credential"]
-    assert credential["metadata"]["documentTitle"] == "Credential document"
+    assert credential["document"]["documentTitle"] == "Credential document"
     assert "private-name.pdf" not in response.text
 
 

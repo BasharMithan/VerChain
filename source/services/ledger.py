@@ -2,6 +2,7 @@ import json
 import threading
 from pathlib import Path
 from typing import Any 
+from pydantic import ValidationError
 
 from utils.logger import Logger
 from validation.blockValidation import BlockValidator
@@ -183,15 +184,15 @@ class Ledger():
         """Reads the local ledger and stores the user, credentials, and issuers' indecies
         to build the index tables."""
 
-        for block in self.blocks:
+        try:
+            for block in self.blocks:
+                self.users[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
+                self.usersByNationalNumber[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
 
-
-
-            self.users[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
-            self.usersByNationalNumber[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
-
-            self.credentials[block["data"]["credential"]["credentialID"]] = Identity.model_validate(block["data"]["credential"])
-            self.issuers[block["data"]["issuer"]["businessID"]] = Authority.model_validate(block["data"]["issuer"])
+                self.credentials[block["data"]["credential"]["credentialID"]] = Identity.model_validate(block["data"]["credential"])
+                self.issuers[block["data"]["issuer"]["businessID"]] = Authority.model_validate(block["data"]["issuer"])
+        except ValidationError as error:
+            raise LedgerCorruptError(str(self.filePath)) from error
 
     def updateLedger(self, newLedger: list) -> None:
         """Defined to meet the requirements of the `ChainSync` class, where it replaces

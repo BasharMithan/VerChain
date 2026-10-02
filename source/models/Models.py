@@ -2,8 +2,8 @@ from datetime import datetime
 from pathlib import Path
 from enum import Enum
 from datetime import datetime, timezone
-from pydantic import BaseModel, model_validator, Field, EmailStr
-from p2pnetwork.nodeconnection import NodeConnection
+import base64
+from pydantic import BaseModel, ConfigDict, model_validator, Field, EmailStr
 from typing import Any
 
 from utils.generators import IDGenerator
@@ -53,19 +53,28 @@ class Authority(BaseModel):
 
 
 class Document(BaseModel):
+    model_config = ConfigDict(ser_json_bytes="base64", val_json_bytes="base64")
+
     documentTitle: str | None = None
     documentType: str | None = None
     documentFormat: str | None = None
     documentContentSize: int = 0
-    documentContent: bytes | None = None
+    # documentContent: bytes | None = None
     documentHash: str = ""
 
-    @model_validator(mode="after")
-    def __post_init__(self) -> "Document":
-        if self.documentHash == "":
-            self.documentHash = f"{self.documentTitle}:{self.documentContent}:{self.documentContentSize}"
+    @model_validator(mode="before")
+    @classmethod
+    def validateLegacyDocumentContent(cls, value: Any) -> Any:
+        if isinstance(value, dict):
+            content = value.get("documentContent")
+            if isinstance(content, str):
+                try:
+                    base64.b64decode(content, altchars=b"-_", validate=True)
+                except ValueError as error:
+                    raise ValueError("Stored document content is not valid base64.") from error
+        return value
 
-        return self
+
 
 
 class Identity(BaseModel):
@@ -82,7 +91,7 @@ class Identity(BaseModel):
     @model_validator(mode="after")
     def __post_init__(self) -> "Identity":
         if (self.CID == ""):
-            self.CID = IDGenerator.generateID(f"{self.document.documentTitle}:{self.credentialID}:{self.document.documentContentSize}") 
+            self.CID = IDGenerator.generateID(f"{self.document.documentHash}:{self.credentialID}:{self.document.documentContentSize}") 
 
         return self
 

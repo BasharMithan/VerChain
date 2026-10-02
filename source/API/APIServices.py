@@ -8,11 +8,13 @@ from services.peer import Peer
 from models.Models import NodeMetadata, Identity, Authority, Block, CHID, Query, Response, User, Document
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
+from utils.chain.documents import DocumentReceiver
 from validation.chain_validation import ChainValidation
 from errors import DuplicateBlockError, InvalidChainError
 from errors.holderValidationErrors import ConflictingIdentityError
 from errors.APIErrors import APIError
 from validation.inputValidation import InputValidation
+from configs.baseConfigs import CredentialConstraints
 
 
 
@@ -22,7 +24,8 @@ class APICommunication:
         self.peer = peer
         self.verifier = Verifier()
         self.inputValidation = InputValidation(self.peer.ledger)
-        pass
+        self.documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
+        
 
 
     
@@ -54,7 +57,7 @@ class APICommunication:
 
 
 
-    def processBlockRegisterationRequest(self, registerationRequest: APIRegisterationRequest, documentHash: str) -> Block | APIError:
+    def processBlockRegisterationRequest(self, registerationRequest: APIRegisterationRequest, document: Document) -> Block | APIError:
         "Takes the `RegisterationRequest` received from the API, builds the block and registers it on the chain."
 
 
@@ -77,17 +80,13 @@ class APICommunication:
                 AUTHID=""
             )
 
-            doc = Identity(
-                image=documentHash,
-                credentialID=registerationRequest.credentialID,
 
-                document=Document(documentTitle="Credential document",
-                                          documentContentSize=registerationRequest.document.size or 0,
-                                          documentType=registerationRequest.document.content_type,
-                                          documentContent=str(registerationRequest.document.read()).encode("utf-8")
-                                          ),
-                CID=""
-            )
+            doc = Identity(
+                image=document.documentHash, # TODO: Change it to something else.
+                credentialID=registerationRequest.credentialID,
+                document=document, CID="" )
+
+
 
         except ValidationError:
             return APIError(error = "Validation-error", message = "Input data is not valid.")

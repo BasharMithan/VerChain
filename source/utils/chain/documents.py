@@ -6,10 +6,11 @@
 
 import hashlib
 from pathlib import Path
-import fitz
 from fastapi import UploadFile
+from pymupdf import pymupdf
 
 from configs.baseConfigs import CredentialConstraints
+from models.Models import Document
 
 
 class DocumentReceiver:
@@ -18,7 +19,9 @@ class DocumentReceiver:
     def __init__(self, constraints: CredentialConstraints) -> None:
         self.constraints = constraints
 
-    async def receive(self, uploadedFile: UploadFile, credentialID: int) -> str:
+
+
+    async def receive(self, uploadedFile: UploadFile, credentialID: int) -> Document:
         self.credentialID = credentialID
         filename = uploadedFile.filename or ""
         fileFormat = Path(filename).suffix.lower()
@@ -42,13 +45,20 @@ class DocumentReceiver:
 
         if fileFormat == ".pdf":
             try:
-                with fitz.open(stream=content, filetype="pdf"):
-                    pass
-            except (fitz.FileDataError, ValueError) as error:
+                with pymupdf.open(stream=content, filetype="pdf"):
+                    ...
+
+
+            except (pymupdf.FileDataError, ValueError) as error:
                 raise ValueError("Credential file is not a valid PDF.") from error
 
-        # Document hash = "content:filetype:credentialID"
-        return hashlib.sha256(content + b":" + fileFormat.encode("utf-8") + b":" + str(self.credentialID).encode("utf-8")).hexdigest()
+        return Document(
+            documentTitle="Credential document", documentType=uploadedFile.content_type,
+            documentContentSize=uploadedFile.size or 0,
+            documentHash=hashlib.sha256(
+                content + b":" + fileFormat.encode("utf-8") + b":" + str(self.credentialID).encode("utf-8")
+            ).hexdigest(),
+            )
 
 
 

@@ -43,7 +43,7 @@ def buildRouter(peer: Peer) -> APIRouter:
         })
         try:
             documentReceiver = DocumentReceiver(settings.credentials)
-            documentHash = await documentReceiver.receive(uploadedFile=registerationRequest.document, credentialID=registerationRequest.credentialID)
+            receivedDocument = await documentReceiver.receive(uploadedFile=registerationRequest.document, credentialID=registerationRequest.credentialID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -51,7 +51,7 @@ def buildRouter(peer: Peer) -> APIRouter:
         result = await run_in_threadpool(
             communication.processBlockRegisterationRequest,
             registerationRequest,
-            documentHash,
+            receivedDocument,
         )
 
         if isinstance(result, APIError):

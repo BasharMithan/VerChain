@@ -26,6 +26,15 @@ def test_genesis_is_mined_and_hash_valid(tempLedgerPath):
     assert genesis.isHashValid() is True
 
 
+# def test_document_binary_content_round_trips_through_json():
+#     content = b"PDF data with non-UTF-8 bytes: \x00\xff\x80"
+#     document = Document(documentContent=content)
+
+#     restored = Document.model_validate_json(document.model_dump_json())
+
+#     assert restored.documentContent == content
+
+
 def test_insert_persists_to_disk(ledgerWithTwoBlocks):
     # ledgerWithTwoBlocks fixture already inserted a second block
     onDisk = json.loads(ledgerWithTwoBlocks.filePath.read_text())
@@ -52,6 +61,18 @@ def test_corrupt_ledger_file_raises_on_load(tempLedgerPath):
 
 def test_malformed_json_raises_on_load(tempLedgerPath):
     tempLedgerPath.write_text("{not valid json")
+
+    with pytest.raises(LedgerCorruptError):
+        Ledger(filePath=tempLedgerPath)
+
+
+def test_invalid_document_content_encoding_raises_ledger_corrupt(tempLedgerPath):
+    Ledger(filePath=tempLedgerPath)
+    blocks = json.loads(tempLedgerPath.read_text())
+    blocks[0]["data"]["credential"]["document"]["documentContent"] = (
+        "<coroutine object UploadFile.read at 0x00000123456789AB>"
+    )
+    tempLedgerPath.write_text(json.dumps(blocks))
 
     with pytest.raises(LedgerCorruptError):
         Ledger(filePath=tempLedgerPath)
