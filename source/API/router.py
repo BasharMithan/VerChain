@@ -8,7 +8,8 @@ from models.Models import Response
 from API.APIServices import APICommunication
 from errors.APIErrors import APIError
 from configs.handler import configs
-from utils.chain.documents import DocumentReceiver
+# from utils.chain.documents import DocumentReceiver
+from services.documents import DocumentReceiver
 
 
 def buildRouter(peer: Peer) -> APIRouter:
@@ -42,7 +43,7 @@ def buildRouter(peer: Peer) -> APIRouter:
             "credential.document": document,
         })
         try:
-            documentReceiver = DocumentReceiver(settings.credentials)
+            documentReceiver = DocumentReceiver(document=document)
             receivedDocument = await documentReceiver.receive(uploadedFile=registerationRequest.document, documentID=registerationRequest.documentID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error

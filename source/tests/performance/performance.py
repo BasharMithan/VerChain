@@ -152,7 +152,10 @@ class Performance:
         for i in range(count):
             user = users[i]
             auth = Authority(name=f"Auth-{count + i}", businessID=200000 + i)
-            doc = Credential(image="", documentID=300000 + i)
+            doc = Credential(
+                document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+                documentID=300000 + i,
+            )
             chid = CHID(user=user, issuer=auth, credential=doc)
             block = Block(data=chid)
  

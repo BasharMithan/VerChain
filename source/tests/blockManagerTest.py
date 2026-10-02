@@ -4,6 +4,7 @@ from utils.blocks.blockManager import BlockManager
 from services.ledger import Ledger
 from errors import BlockHashMismatchError, BlockNotMinedError, DuplicateBlockError
 from errors.holderValidationErrors import ConflictingCredentialError
+from models.Models import Document
 
 
 @pytest.fixture
@@ -130,7 +131,10 @@ def test_should_broadcast_allows_a_different_chid(blockManager, unminedBlock):
     )
     other_chid = CHID(
         user=other_user,
-        credential=Credential(image="", documentID=2),
+        credential=Credential(
+            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            documentID=2,
+        ),
         issuer=Authority(name="OtherAuth", businessID=2),
     )
     other_block = unminedBlock.model_copy(update={"data": other_chid})

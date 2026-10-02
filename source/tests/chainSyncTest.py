@@ -12,6 +12,7 @@ from models.Models import (
     ChainSyncRequest,
     ChainSyncResponse,
     Credential,
+    Document,
     NodeConnectionType,
     NodeMetadata,
     User,
@@ -146,8 +147,11 @@ def ledger_with_one_block(tmp_path):
 
     user = User(name="SyncUser1", nationalNumber=111, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name="SyncAuthority", businessID=1)
-    Credential = Credential(image="", documentID=1)
-    chid = CHID(user=user, credential=Credential, issuer=auth)
+    credential = Credential(
+        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        documentID=1,
+    )
+    chid = CHID(user=user, credential=credential, issuer=auth)
     block = Block(data=chid)
     block.index = len(ledger.blocks)
     block.previousHash = ledger.blocks[-1]["hash"]
@@ -164,8 +168,11 @@ def ledger_with_two_blocks(tmp_path):
     for idx in range(2):
         user = User(name=f"SyncUser_{idx}", nationalNumber=100 + idx, phone=idx, age=20, email="", birth="")
         auth = Authority(name="SyncAuthority", businessID=idx)
-        Credential = Credential(image="", documentID=idx)
-        chid = CHID(user=user, credential=Credential, issuer=auth)
+        credential = Credential(
+            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            documentID=idx,
+        )
+        chid = CHID(user=user, credential=credential, issuer=auth)
         block = Block(data=chid)
         block.index = len(ledger.blocks)
         block.previousHash = ledger.blocks[-1]["hash"]
@@ -290,8 +297,12 @@ def test_receive_updates_ledger_with_longer_valid_chain(tmp_path):
     for idx in range(2):
         user = User(name=f"RemoteUser_{idx}", nationalNumber=300 + idx, phone=idx, age=25, email="test@bc.io", birth="")
         auth = Authority(name="RemoteAuth", businessID=10 + idx)
-        Credential = Credential(documentID=idx, image="", CID="")
-        chid = CHID(user=user, credential=Credential, issuer=auth)
+        credential = Credential(
+            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            documentID=idx,
+            CID="",
+        )
+        chid = CHID(user=user, credential=credential, issuer=auth)
         block = Block(data=chid)
         block.index = len(remote.blocks)
         block.previousHash = remote.blocks[-1]["hash"]
@@ -330,8 +341,11 @@ def test_receive_does_not_replace_with_shorter_chain(tmp_path):
     for idx in range(2):
         user = User(name=f"LocalUser_{idx}", nationalNumber=400 + idx, phone=idx, age=25, email="test@bc.io", birth="")
         auth = Authority(name="LocalAuth", businessID=20 + idx)
-        Credential = Credential(image="", documentID=idx)
-        chid = CHID(user=user, credential=Credential, issuer=auth)
+        credential = Credential(
+            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            documentID=idx,
+        )
+        chid = CHID(user=user, credential=credential, issuer=auth)
         block = Block(data=chid)
         block.index = len(local.blocks)
         block.previousHash = local.blocks[-1]["hash"]

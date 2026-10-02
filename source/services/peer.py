@@ -9,7 +9,7 @@ from pydantic_core import ValidationError
 from errors.blockErrors import DuplicateBlockError
 
 from models.constants import BOOTSTRAP_NODES
-from models.Models import (Action, Block, NodeMetadata,Payload)
+from models.Models import (Action, Block, NodeMetadata, Payload, Document)
 
 from utils.nodeStorageManager import NodeStorageManager
 from utils.blocks.blockManager import BlockManager
@@ -192,7 +192,10 @@ if __name__ == "__main__":
     issuer = Authority(name="JPUF", businessID=3423)
 
     user1  = User(name="Local", nationalNumber=1111, phone=1, age=30, email="", birth="")
-    doc1   = Credential(image="", documentID=1)
+    doc1   = Credential(
+        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        documentID=1,
+    )
     block1 = Block(data=CHID(user=user1, credential=doc1, issuer=issuer))
 
 

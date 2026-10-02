@@ -8,7 +8,7 @@ from utils.logger import Logger
 from validation.blockValidation import BlockValidator
 from validation.chain_validation import ChainValidation
 from utils.blocks.miner import Miner
-from models.Models import Block, CHID, Authority, User, Credential
+from models.Models import Block, CHID, Authority, User, Credential, Document
 
 from errors import (
     BlockNotMinedError,
@@ -163,7 +163,10 @@ class Ledger():
     def __generateGensisBlock(self) -> None:
         user=User(name="Gensis-Block", nationalNumber=0, phone=0, age=0, email="gensis@blockchain.io", birth="")
         auth = Authority(name="", businessID=0)
-        doc = Credential(image="", documentID=0)
+        doc = Credential(
+            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            documentID=0,
+        )
         chid = CHID(user=user, credential=doc, issuer=auth)
 
         block = Block(data=chid)

@@ -3,10 +3,10 @@ Date: 16/09/2026
 Developer: Bashar Mithan
 Title: Document.
 Description: Contains the document (credential) related services/utils.
-1. Validation: Validating the type of the credential ( .pdf, .png, ... ).
-2. Hashing: Hashing the document and producing the CID of the document.
-3. Chaining: Linking the document to the holder (User) & issuer (Authority) to add to the chain.
-4. Verification: Checking the document ownership When the verification input contains a document.
+- Receiving: Receives the uploaded document.
+- Validation: Validating the type of the credential ( .pdf, .png, ... ) & the size of the document.
+- Hashing: Hashing the document and producing the CID of the document.
+- Verification: Checking the document ownership When the verification input contains a document.
 """
 
 
@@ -18,6 +18,7 @@ from pymupdf import pymupdf
 
 from configs.baseConfigs import CredentialConstraints
 from models.Models import Document
+from validation.documents import DocumentValidation
 
 from errors.documents import UploadedDocumentTooLarge, UploadedDocumentNotSupported
 
@@ -25,32 +26,32 @@ from errors.documents import UploadedDocumentTooLarge, UploadedDocumentNotSuppor
 class DocumentReceiver:
     """Validate an uploaded credential and return its content digest."""
 
-    def __init__(self,document: UploadFile, constraints: CredentialConstraints = CredentialConstraints()) -> None:
-        self.constraints = constraints
+    def __init__(self, document: UploadFile, constraints: CredentialConstraints | None = None) -> None:
+        self.constraints = constraints or CredentialConstraints()
         self.document = document
-        
-
 
     async def receive(self, uploadedFile: UploadFile, documentID: int) -> Document:
-        "Build the ``Document`` model from the ``UploadFile``"
+        "Builds the ``Document`` model from the ``UploadFile``"
 
         filename = uploadedFile.filename or ""
         fileFormat = Path(filename).suffix.lower()
+        content = await self.read()
 
-                
         document = Document(
-            documentTitle=uploadedFile.filename,
+            documentTitle="Credential document",
             documentFormat=fileFormat,
-            documentContent= await self.read(),
-            documentContentSize=uploadedFile.size or 0
-            )
+            documentContent=content,
+            documentContentSize=len(content),
+        )
 
         try:
-            documentValidation = DocumentValidation(document=document)
+            documentValidation = DocumentValidation(document=document, constraints=self.constraints)
             documentValidation.validate()
         except (UploadedDocumentTooLarge, UploadedDocumentNotSupported) as error:
-            raise ValueError from error
-            
+            raise ValueError(str(error)) from error
+        except ValueError as error:
+            raise ValueError(str(error)) from error
+
         documentHashBuilder = DocumentHashing(document=document, documentID=documentID)
         hashedDocument: Document = documentHashBuilder.hash()
 
@@ -85,8 +86,11 @@ class DocumentHashing:
         self.document = document
 
     def hash(self) -> Document:
-        payload = str(self.document.documentContent).encode("utf-8")
-        documentHash = hashlib.sha256(payload + b":" + str(self.documentID).encode("utf-8")).hexdigest()
+        payload = self.document.documentContent or b""
+        file_format = (self.document.documentFormat or "").encode("utf-8")
+        documentHash = hashlib.sha256(
+            payload + b":" + file_format + b":" + str(self.documentID).encode("utf-8")
+        ).hexdigest()
 
         self.document.documentHash = documentHash
 
@@ -95,26 +99,3 @@ class DocumentHashing:
 
 
 
-class DocumentValidation:
-    def __init__(self, document: Document) -> None:
-        self.document = document
-
-
-    def validate(self) -> None:
-        """Checks if the uploaded document is valid (meets the document constraints).
-
-        Args:
-            uploadedDocument (UploadFile): The uploaded document from the API
-
-        """
-
-        if self.document.documentContentSize > CredentialConstraints.maxUploadSize:
-            raise UploadedDocumentTooLarge
-            
-
-        if self.document.documentFormat not in CredentialConstraints.supportedCredentialFormats:
-            raise UploadedDocumentNotSupported
-            
-
-        
-        

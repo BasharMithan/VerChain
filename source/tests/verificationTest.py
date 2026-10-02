@@ -4,13 +4,16 @@ from services.ledger import Ledger
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
 from utils.blocks.miner import Miner
-from models.Models import Block, CHID, User, Authority, Credential, Query, Response
+from models.Models import Block, CHID, User, Authority, Credential, Document, Query, Response
 
 
 def _makeChid(nationalNumber: int, documentID: int, businessID: int, tag: str = "") -> CHID:
     user = User(name=f"User{tag}", nationalNumber=nationalNumber, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name=f"Auth{tag}", businessID=businessID)
-    doc = Credential(image="", documentID=documentID)
+    doc = Credential(
+        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        documentID=documentID,
+    )
     return CHID(user=user, credential=doc, issuer=auth)
 
 
@@ -112,7 +115,10 @@ def test_check_declines_when_only_partial_match(ledgerA: Ledger):
     _registerChid(ledgerA, registeredChid)
 
     # Same user, but different credential/issuer -> different CHID
-    mismatchedCredential = Credential(image="", documentID=999)
+    mismatchedCredential = Credential(
+        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        documentID=999,
+    )
     mismatchedIssuer = Authority(name="Different", businessID=999)
     query = Query(
         user=registeredChid.user,

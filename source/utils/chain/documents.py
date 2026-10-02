@@ -53,7 +53,7 @@ class DocumentReceiver:
                 raise ValueError("Credential file is not a valid PDF.") from error
 
         return Document(
-            documentTitle="Credential document", documentType=uploadedFile.content_type,
+            documentTitle="Credential document", documentFormat=uploadedFile.content_type,
             documentContentSize=uploadedFile.size or 0,
             documentHash=hashlib.sha256(
                 content + b":" + fileFormat.encode("utf-8") + b":" + str(self.documentID).encode("utf-8")

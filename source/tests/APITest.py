@@ -142,7 +142,7 @@ def test_register_stores_hash_of_content_and_extension(apiClient):
 
     assert res.status_code == 201
     expected = hashlib.sha256(content + b":.pdf:4").hexdigest()
-    assert res.json()["data"]["credential"]["image"] == expected
+    assert res.json()["data"]["credential"]["document"]["documentHash"] == expected
 
 
 def test_register_rejects_non_pdf_content_with_pdf_filename(apiClient):

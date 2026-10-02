@@ -2,7 +2,7 @@
 from enum import Enum
 from pathlib import Path
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 """
@@ -27,9 +27,11 @@ class LedgerCofigs(BaseSettings):
 class ConnectionCofigs(BaseSettings):
     bootstrapPeers: list[tuple[str, int]] = [('127.0.0.1', 8000)]
 
-class CredentialConstraints(BaseSettings):
+
+
+class CredentialConstraints(BaseModel):
     maxUploadSize: int = 5 * 1024 * 1024
-    supportedCredentialFormats: set[str] = { ".pdf" }
+    supportedCredentialFormats: set[str] = {".pdf"}
 
 
 
