@@ -40,10 +40,10 @@ def apiClient(tmp_path):
     return TestClient(app), fakePeer
 
 
-def _registerPayload(nationalNumber, identityID, issuerID, name="Alice", issuerName="JPUF"):
+def _registerPayload(nationalNumber, documentID, issuerID, name="Alice", issuerName="JPUF"):
     return {
         "user": {"name": name, "nationalNumber": nationalNumber, "phone": 1, "age": 30, "email": "a@x.com", "birth": "1995-01-01"},
-        "credential": {"document": "", "credentialID": identityID},
+        "credential": {"document": "", "documentID": documentID},
         "issuer": {"name": issuerName, "issuerID": issuerID},
     }
 
@@ -59,7 +59,7 @@ def _postRegister(client, payload, filename="credential.pdf", content=None):
         "user.age": str(user["age"]),
         "user.email": user["email"],
         "user.birth": user["birth"],
-        "credential.credentialID": str(credential["credentialID"]),
+        "credential.documentID": str(credential["documentID"]),
         "issuer.name": issuer["name"],
         "issuer.issuerID": str(issuer["issuerID"]),
     }
@@ -96,7 +96,7 @@ def test_register_openapi_uses_multipart_form(apiClient):
     properties = openapi["components"]["schemas"][schema_name]["properties"]
 
     assert "user.name" in properties
-    assert "credential.credentialID" in properties
+    assert "credential.documentID" in properties
     assert properties["credential.document"]["contentMediaType"] == "application/octet-stream"
 
 
@@ -173,12 +173,12 @@ def test_registered_block_does_not_include_uploaded_filename(apiClient):
 
 
 
-def test_check_approves_registered_identity(apiClient):
+def test_check_approves_registered_Credential(apiClient):
     client, peer = apiClient
     _postRegister(client, _registerPayload(2002, 2, 20, name="Carol", issuerName="GovAuth"))
 
     res = client.post("/check", json={
-        "user": "Carol", "UserID": 2002, "credentialID": 2,
+        "user": "Carol", "UserID": 2002, "documentID": 2,
         "issuer": "GovAuth", "issuerID": 20,
     })
 
@@ -194,7 +194,7 @@ def test_check_declines_for_mismatched_combination(apiClient):
     _postRegister(client, _registerPayload(3004, 31, 301, name="Eve", issuerName="AuthY"))
 
     res = client.post("/check", json={
-        "user": "Dave", "UserID": 3003, "credentialID": 31,  # Eve's credential
+        "user": "Dave", "UserID": 3003, "documentID": 31,  # Eve's credential
         "issuer": "AuthY", "issuerID": 301,                   # Eve's issuer
     })
     assert res.status_code == 200
@@ -204,7 +204,7 @@ def test_check_declines_for_mismatched_combination(apiClient):
 def test_check_returns_error_when_identifiers_unknown(apiClient):
     client, _ = apiClient
     res = client.post("/check", json={
-        "user": "Nobody", "UserID": 999999, "credentialID": 999999,
+        "user": "Nobody", "UserID": 999999, "documentID": 999999,
         "issuer": "Nobody", "issuerID": 999999,
     })
     assert res.status_code == 200

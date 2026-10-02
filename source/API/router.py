@@ -24,7 +24,7 @@ def buildRouter(peer: Peer) -> APIRouter:
         age: Annotated[int, Form(alias="user.age")],
         email: Annotated[str, Form(alias="user.email")],
         birth: Annotated[str, Form(alias="user.birth")],
-        credentialID: Annotated[int, Form(alias="credential.credentialID")],
+        documentID: Annotated[int, Form(alias="credential.documentID")],
         issuerName: Annotated[str, Form(alias="issuer.name")],
         issuerID: Annotated[int, Form(alias="issuer.issuerID")],
         document: Annotated[UploadFile, File(alias="credential.document")],
@@ -36,14 +36,14 @@ def buildRouter(peer: Peer) -> APIRouter:
             "user.age": age,
             "user.email": email,
             "user.birth": birth,
-            "credential.credentialID": credentialID,
+            "credential.documentID": documentID,
             "issuer.name": issuerName,
             "issuer.issuerID": issuerID,
             "credential.document": document,
         })
         try:
             documentReceiver = DocumentReceiver(settings.credentials)
-            receivedDocument = await documentReceiver.receive(uploadedFile=registerationRequest.document, credentialID=registerationRequest.credentialID)
+            receivedDocument = await documentReceiver.receive(uploadedFile=registerationRequest.document, documentID=registerationRequest.documentID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 

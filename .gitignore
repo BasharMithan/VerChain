@@ -7,7 +7,7 @@ docs/P2pnetwork-Documentation.pdf
 docs/Real-World-Example-(BC IDV).drawio
 docs/Real-World-Example-(BC IDV).pdf
 docs/todo.md
-docs/What is a Blockchain-Based Identity Verification System.pdf
+docs/What is a Blockchain-Based Credential Verification System.pdf
 docs/Current Performance Analysis Report.md
 docs/Performance Report (Ledger Insert and Lookup Speed).md
 docs/VerChain-Docs
@@ -18,7 +18,7 @@ docs/full-arcitecture-guide.md
 
 storage/*.json
 
-source/Blockchain_based_Identity_Verification_System.egg-info
+source/Blockchain_based_Credential_Verification_System.egg-info
 source/*.egg-info/
 
 VerChain-venv

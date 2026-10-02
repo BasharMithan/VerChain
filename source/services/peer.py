@@ -13,7 +13,7 @@ from models.Models import (Action, Block, NodeMetadata,Payload)
 
 from utils.nodeStorageManager import NodeStorageManager
 from utils.blocks.blockManager import BlockManager
-from errors.holderValidationErrors import ConflictingIdentityError
+from errors.holderValidationErrors import ConflictingCredentialError
 from services.ledger import Ledger
 from services.network import Network
 from models.network import NetworkContext
@@ -68,7 +68,7 @@ class Peer:
         self.nodeManager = NodeStorageManager(self.title)
         self.network = Network(self.title, self.host, self.port, self.nodeManager, self.blockManager, self.ledger, networkContext)
 
-        # Creating an identity for the current node
+        # Creating an Credential for the current node
         self.me = self.network.metadata
 
         self.chainSync = self.network.chainSharing
@@ -165,8 +165,8 @@ class Peer:
         except DuplicateBlockError:
             return DuplicateBlockError(block.data.chid)
 
-        except ConflictingIdentityError:
-            return ConflictingIdentityError(
+        except ConflictingCredentialError:
+            return ConflictingCredentialError(
                 nationalNumber=block.data.user.nationalNumber,
                 existingName="",
                 incomingName=""
@@ -187,12 +187,12 @@ class Peer:
 
 
 if __name__ == "__main__":
-    from models import Authority, User, Identity, CHID
+    from models import Authority, User, Credential, CHID
 
     issuer = Authority(name="JPUF", businessID=3423)
 
     user1  = User(name="Local", nationalNumber=1111, phone=1, age=30, email="", birth="")
-    doc1   = Identity(image="", credentialID=1)
+    doc1   = Credential(image="", documentID=1)
     block1 = Block(data=CHID(user=user1, credential=doc1, issuer=issuer))
 
 

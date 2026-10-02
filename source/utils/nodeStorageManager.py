@@ -61,7 +61,7 @@ class NodeStorageManager:
         """
         Converts a p2pnetwork NodeConnection object to a NodeMetadata object.
     
-        NodeConnection stores the remote node's identity in .id, .host, .port.
+        NodeConnection stores the remote node's Credential in .id, .host, .port.
         The caller must supply the connectionType since NodeConnection itself
         does not carry that information.
         """

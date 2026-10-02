@@ -8,7 +8,7 @@ from utils.logger import Logger
 from validation.blockValidation import BlockValidator
 from validation.chain_validation import ChainValidation
 from utils.blocks.miner import Miner
-from models.Models import Block, CHID, Authority, User, Identity
+from models.Models import Block, CHID, Authority, User, Credential
 
 from errors import (
     BlockNotMinedError,
@@ -41,7 +41,7 @@ class Ledger():
         self.usersByNationalNumber: dict[int, User] = {}
         self.usersByUsername: dict[str, User] = {}
 
-        self.credentials: dict[int, Identity] = {}
+        self.credentials: dict[int, Credential] = {}
         self.issuers: dict[int, Authority] = {}
 
         self.loadFromLedger()
@@ -134,7 +134,7 @@ class Ledger():
             self.blocks.append(blockAsDict)
 
             self.users[block.data.user.nationalNumber] = block.data.user
-            self.credentials[block.data.credential.credentialID] = block.data.credential
+            self.credentials[block.data.credential.documentID] = block.data.credential
             self.issuers[block.data.issuer.businessID] = block.data.issuer
 
             self.__writeBlockToLedger(blockAsDict)
@@ -163,7 +163,7 @@ class Ledger():
     def __generateGensisBlock(self) -> None:
         user=User(name="Gensis-Block", nationalNumber=0, phone=0, age=0, email="gensis@blockchain.io", birth="")
         auth = Authority(name="", businessID=0)
-        doc = Identity(image="", credentialID=0)
+        doc = Credential(image="", documentID=0)
         chid = CHID(user=user, credential=doc, issuer=auth)
 
         block = Block(data=chid)
@@ -189,7 +189,7 @@ class Ledger():
                 self.users[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
                 self.usersByNationalNumber[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
 
-                self.credentials[block["data"]["credential"]["credentialID"]] = Identity.model_validate(block["data"]["credential"])
+                self.credentials[block["data"]["credential"]["documentID"]] = Credential.model_validate(block["data"]["credential"])
                 self.issuers[block["data"]["issuer"]["businessID"]] = Authority.model_validate(block["data"]["issuer"])
         except ValidationError as error:
             raise LedgerCorruptError(str(self.filePath)) from error
@@ -208,7 +208,7 @@ class Ledger():
         self.shouldRequestChain = False
         
         self.users: dict[int, User] = {}
-        self.credentials: dict[int, Identity] = {}
+        self.credentials: dict[int, Credential] = {}
         self.issuers: dict[int, Authority] = {}
 
         self.loadFromLedger()
@@ -225,8 +225,8 @@ class Ledger():
         return None
 
 
-    def findCredential(self, credentialID: int) -> Identity | None:
-        return self.credentials.get(credentialID, None)
+    def findCredential(self, documentID: int) -> Credential | None:
+        return self.credentials.get(documentID, None)
 
     def findIssuer(self, issuerID: int, issuerName: str) -> Authority | None:
         issuer = self.issuers.get(issuerID, None)

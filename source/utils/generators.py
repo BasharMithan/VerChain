@@ -11,7 +11,7 @@ class IDGenerator:
 
     @staticmethod
     def generateCHID(HID: str, CID: str, AUTHID: str) -> str:
-        """Generates the **CHID** key to be assigned to an identity. \n
+        """Generates the **CHID** key to be assigned to an Credential. \n
         The CHID key is generated in the following sequence:
             `CHID = {HID, CID, AUTHID}`
         All the keys in the list are hash values, and they are contatenated as a single string,

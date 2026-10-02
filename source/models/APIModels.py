@@ -18,14 +18,8 @@ class UserAPIModel(BaseModel):
 
 class CredentialAPIModel(BaseModel):
     document: str
-    credentialID: int
+    documentID: int
 
-
-
-class IdentityAPIModel(BaseModel):
-    image: str
-    identityID: int
-    # metadata: DocumentMetadata
 
 
 class IssuerAPIModel(BaseModel):
@@ -44,7 +38,7 @@ class APIRegisterationRequest(BaseModel):
     age: Annotated[int, Form(alias="user.age")]
     email: Annotated[str, Form(alias="user.email")]
     birth: Annotated[str, Form(alias="user.birth")]
-    credentialID: Annotated[int, Form(alias="credential.credentialID")]
+    documentID: Annotated[int, Form(alias="credential.documentID")]
     issuerName: Annotated[str, Form(alias="issuer.name")]
     issuerID: Annotated[int, Form(alias="issuer.issuerID")]
     document: Annotated[UploadFile, File(alias="credential.document")]
@@ -56,7 +50,7 @@ class APIRegisterationResponse(BaseModel):
 class VerificationRequest(BaseModel):
     user: str # User.name
     UserID: int # User.nationalNumber
-    credentialID: int # Identity.IdentityID
+    documentID: int # Credential.documentID
     issuer: str # Authority.name
     issuerID: int # Authority.businessID
 
@@ -78,5 +72,5 @@ class ChainModel(BaseModel):
 
 class IDTyping(Enum):
     user = "USER"
-    identity = "IDENTITY"
+    Credential = "Credential"
     authority = "AUTHORITY"

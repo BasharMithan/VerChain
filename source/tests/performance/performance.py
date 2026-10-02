@@ -9,7 +9,7 @@ from dataclasses import dataclass, asdict
 from services.ledger import Ledger
 from utils.blocks.blockManager import BlockManager
 from validation.chain_validation import ChainValidation
-from models import User, Identity, Authority, CHID, Block
+from models import User, Credential, Authority, CHID, Block
 from utils.utility_function import getProjectVersion
 
 
@@ -152,7 +152,7 @@ class Performance:
         for i in range(count):
             user = users[i]
             auth = Authority(name=f"Auth-{count + i}", businessID=200000 + i)
-            doc = Identity(image="", credentialID=300000 + i)
+            doc = Credential(image="", documentID=300000 + i)
             chid = CHID(user=user, issuer=auth, credential=doc)
             block = Block(data=chid)
  

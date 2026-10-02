@@ -56,10 +56,9 @@ class Document(BaseModel):
     model_config = ConfigDict(ser_json_bytes="base64", val_json_bytes="base64")
 
     documentTitle: str | None = None
-    documentType: str | None = None
+    documentContent: bytes | None = None
     documentFormat: str | None = None
     documentContentSize: int = 0
-    # documentContent: bytes | None = None
     documentHash: str = ""
 
     @model_validator(mode="before")
@@ -77,28 +76,23 @@ class Document(BaseModel):
 
 
 
-class Identity(BaseModel):
-    # user: User
-    # issuer: Authority
-    image: str
-    credentialID: int
+class Credential(BaseModel):
+    document: Document
+    documentID: int
     CID: str = ""
-
-    document: Document = Document()
-    
 
 
     @model_validator(mode="after")
-    def __post_init__(self) -> "Identity":
+    def __post_init__(self) -> "Credential":
         if (self.CID == ""):
-            self.CID = IDGenerator.generateID(f"{self.document.documentHash}:{self.credentialID}:{self.document.documentContentSize}") 
+            self.CID = IDGenerator.generateID(f"{self.document.documentHash}:{self.documentID}") 
 
         return self
 
 
 class CHID(BaseModel):
     user: User
-    credential: Identity
+    credential: Credential
     issuer: Authority
     chid: str = ""
 
@@ -175,7 +169,7 @@ class Action(Enum):
 
 class Query(BaseModel):
     user: User
-    credential: Identity
+    credential: Credential
     issuer: Authority
        
 

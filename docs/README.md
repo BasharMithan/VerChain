@@ -1,6 +1,6 @@
-# Blockchain-Based Identity Verification System
+# Blockchain-Based Credential Verification System
 
-This project is a _Blockchain-Based Identity Verification System_, and it's main objective to enhance the security and privacy when it comes to digital credentials. By using the **Blockchain** technology we assure that the data won't be changed (immutable), decentralized and hashed in the blockchain so it won't be reviled to anyone.
+This project is a _Blockchain-Based Credential Verification System_, and it's main objective to enhance the security and privacy when it comes to digital credentials. By using the **Blockchain** technology we assure that the data won't be changed (immutable), decentralized and hashed in the blockchain so it won't be reviled to anyone.
 
 ## System Objective
 
@@ -81,7 +81,7 @@ CHID (Credential Holder Identifier) is a compact reference stored on-chain:
 CHID = "HID:CID:AUTHID"
 ```
 
-- `HID` — Holder ID (derived from holder identity)
+- `HID` — Holder ID (derived from holder Credential)
 - `CID` — Credential ID (derived from credential data)
 - `AUTHID` — Authority/Issuer ID
 
@@ -104,7 +104,7 @@ pip install -e .
 Example Python usage (illustrative):
 
 ```python
-# Create the identites: User, Authority and the Identity.
+# Create the identites: User, Authority and the Credential.
     fake_user = User(name="", nationalNumber=0, phone=0, age=0, email="", birth="")
 
     user = User(name="Testing the Chain Validation - 2", nationalNumber=2312311,
@@ -113,7 +113,7 @@ Example Python usage (illustrative):
 
     issuer = Authority(name="JPUF", businessID=3423)
 
-    doc = Identity(user=user, issuer=issuer, image="", credentialID=333)
+    doc = Credential(user=user, issuer=issuer, image="", documentID=333)
 
     chid = CHID(user=user, credential=doc, issuer=issuer)
 
@@ -164,7 +164,7 @@ Specify the project license in LICENSE file.
 
 ## Contact
 
-Maintainer: Bashar Mithan Repository: [https://github.com/BasharMithan/Blockchain-based-Identity-Verification-System](https://github.com/BasharMithan/Blockchain-based-Identity-Verification-System)
+Maintainer: Bashar Mithan Repository: [https://github.com/BasharMithan/Blockchain-based-Credential-Verification-System](https://github.com/BasharMithan/Blockchain-based-Credential-Verification-System)
 
 ## To be added
 

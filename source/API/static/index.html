@@ -317,7 +317,7 @@
       <span class="kicker">Peer Node Console</span>
       <h1>The Registry Desk</h1>
     </div>
-    <div class="date">Blockchain-Based Identity<br>Verification System</div>
+    <div class="date">Blockchain-Based Credential<br>Verification System</div>
   </header>
 
   <div class="connbar">
@@ -353,8 +353,8 @@
 
         <div style="display:flex; flex-direction:column; gap:16px;">
           <fieldset>
-            <legend>Credential (Identity)</legend>
-            <div class="field"><label>Credential ID</label><input required type="number" name="credential.credentialID"></div>
+            <legend>Credential (Credential)</legend>
+            <div class="field"><label>Credential ID</label><input required type="number" name="credential.documentID"></div>
             <div class="field">
               <label for="credentialFile">Credential</label>
               <input type="file" id="credentialFile" name="credential.document" accept=".pdf" required>
@@ -396,7 +396,7 @@
         </fieldset>
         <fieldset>
           <legend>Credential &amp; Issuer</legend>
-          <div class="field"><label>Credential ID</label><input required type="number" name="credentialID"></div>
+          <div class="field"><label>Credential ID</label><input required type="number" name="documentID"></div>
           <div class="field"><label>Issuer name</label><input required type="text" name="issuer"></div>
           <div class="field"><label>Issuer ID</label><input required type="number" name="issuerID"></div>
         </fieldset>
@@ -635,7 +635,7 @@
     const payload = {
       user: raw.user,
       UserID: raw.UserID,
-      credentialID: raw.credentialID,
+      documentID: raw.documentID,
       issuer: raw.issuer,
       issuerID: raw.issuerID
     };

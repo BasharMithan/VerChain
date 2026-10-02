@@ -1,5 +1,5 @@
 import pytest
-from models.Models import Block, CHID, User, Authority, Identity
+from models.Models import Block, CHID, User, Authority, Credential
 from utils.blocks.miner import Miner
 from services.ledger import Ledger
 from services.peer import Peer
@@ -10,7 +10,7 @@ def unminedBlock():
     """A Block with nonce=0, hash='' — not yet mined."""
     user = User(name="Test", nationalNumber=1, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name="TestAuth", businessID=1)
-    doc = Identity(image="", credentialID=1)
+    doc = Credential(image="", documentID=1)
     chid = CHID(user=user, credential=doc, issuer=auth)
     return Block(data=chid)
 

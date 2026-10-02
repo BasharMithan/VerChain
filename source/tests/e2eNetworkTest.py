@@ -6,7 +6,7 @@ import itertools
 import pytest
 
 from services.peer import Peer
-from models.Models import Authority, Block, CHID, Identity, User
+from models.Models import Authority, Block, CHID, Credential, User
 
 
 pytestmark = pytest.mark.integration
@@ -55,10 +55,10 @@ def _connect(a: Peer, b: Peer, settle: float = 1.0) -> None:
 
 
 @pytestmark
-def _makeBlock(tag: str, nationalNumber: int, credentialID: int, businessID: int) -> Block:
+def _makeBlock(tag: str, nationalNumber: int, documentID: int, businessID: int) -> Block:
     user = User(name=f"User-{tag}", nationalNumber=nationalNumber, phone=1, age=25, email="test@bc.io", birth="")
     auth = Authority(name=f"Auth-{tag}", businessID=businessID)
-    doc = Identity(image="", credentialID=credentialID)
+    doc = Credential(image="", documentID=documentID)
     chid = CHID(user=user, credential=doc, issuer=auth)
     return Block(data=chid)
 
@@ -70,7 +70,7 @@ def test_registered_block_propagates_to_directly_connected_peer(spawnPeer):
     peerB = spawnPeer("B")
     _connect(peerA, peerB)
 
-    block = _makeBlock("AB", nationalNumber=1001, credentialID=1, businessID=10)
+    block = _makeBlock("AB", nationalNumber=1001, documentID=1, businessID=10)
     result = peerA.registerBlock(block)
 
     assert result is not None
@@ -92,7 +92,7 @@ def test_status_and_chain_agree_across_connected_peers(spawnPeer):
     peerB = spawnPeer("B")
     _connect(peerA, peerB)
 
-    block = _makeBlock("STATUS", nationalNumber=2002, credentialID=2, businessID=20)
+    block = _makeBlock("STATUS", nationalNumber=2002, documentID=2, businessID=20)
     peerA.registerBlock(block)
     time.sleep(1.5)
 
@@ -113,7 +113,7 @@ def test_verification_succeeds_on_peer_that_did_not_originate_block(spawnPeer):
 
     chid = CHID(
         user=User(name="Remote", nationalNumber=3003, phone=1, age=40, email="test@bc.io", birth=""),
-        credential=Identity(image="", credentialID=3),
+        credential=Credential(image="", documentID=3),
         issuer=Authority(name="RemoteAuth", businessID=30),
     )
     peerA.registerBlock(Block(data=chid))
@@ -136,7 +136,7 @@ def test_three_peer_mesh_all_receive_direct_broadcast(spawnPeer):
     _connect(peerA, peerC)
     _connect(peerB, peerC)
 
-    block = _makeBlock("MESH", nationalNumber=4004, credentialID=4, businessID=40)
+    block = _makeBlock("MESH", nationalNumber=4004, documentID=4, businessID=40)
     peerB.registerBlock(block)
     time.sleep(2)
 
@@ -150,7 +150,7 @@ def test_three_peer_mesh_all_receive_direct_broadcast(spawnPeer):
 def test_late_joining_peer_syncs_existing_chain(spawnPeer):
     peerA = spawnPeer("A")
     for i in range(3):
-        block = _makeBlock(f"PRE{i}", nationalNumber=5000 + i, credentialID=5 + i, businessID=50 + i)
+        block = _makeBlock(f"PRE{i}", nationalNumber=5000 + i, documentID=5 + i, businessID=50 + i)
         peerA.registerBlock(block)
     assert len(peerA.ledger.blocks) == 4  # genesis + 3
 
@@ -177,7 +177,7 @@ def test_block_propagates_through_a_line_topology(spawnPeer):
     _connect(peerA, peerB)
     _connect(peerB, peerC)  # A and C are NOT directly connected
 
-    block = _makeBlock("LINE", nationalNumber=6006, credentialID=6, businessID=60)
+    block = _makeBlock("LINE", nationalNumber=6006, documentID=6, businessID=60)
     peerA.registerBlock(block)
     time.sleep(2.5)  # one extra hop needs a bit more settle time
 
@@ -197,7 +197,7 @@ def test_mesh_relay_does_not_duplicate_or_loop(spawnPeer):
     _connect(peerA, peerC)
     _connect(peerB, peerC)
 
-    block = _makeBlock("NOLOOP", nationalNumber=7007, credentialID=7, businessID=70)
+    block = _makeBlock("NOLOOP", nationalNumber=7007, documentID=7, businessID=70)
     peerA.registerBlock(block)
     time.sleep(2.5)
 

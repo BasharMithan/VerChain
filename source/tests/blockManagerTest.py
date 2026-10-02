@@ -3,7 +3,7 @@ import pytest
 from utils.blocks.blockManager import BlockManager
 from services.ledger import Ledger
 from errors import BlockHashMismatchError, BlockNotMinedError, DuplicateBlockError
-from errors.holderValidationErrors import ConflictingIdentityError
+from errors.holderValidationErrors import ConflictingCredentialError
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def test_register_duplicate_raises(blockManager: BlockManager, unminedBlock):
     duplicate.nonce = 0
     duplicate.hash = ""
 
-    with pytest.raises(ConflictingIdentityError):
+    with pytest.raises(ConflictingCredentialError):
         blockManager.registerBlock(duplicate)
 
     # Ledger should still only have genesis + the first block
@@ -118,7 +118,7 @@ def test_should_broadcast_only_once_for_each_chid(blockManager, unminedBlock):
 def test_should_broadcast_allows_a_different_chid(blockManager, unminedBlock):
     blockManager.shouldBoradcast(unminedBlock)
 
-    from models.Models import Authority, CHID, Identity, User
+    from models.Models import Authority, CHID, Credential, User
 
     other_user = User(
         name="Other",
@@ -130,7 +130,7 @@ def test_should_broadcast_allows_a_different_chid(blockManager, unminedBlock):
     )
     other_chid = CHID(
         user=other_user,
-        credential=Identity(image="", credentialID=2),
+        credential=Credential(image="", documentID=2),
         issuer=Authority(name="OtherAuth", businessID=2),
     )
     other_block = unminedBlock.model_copy(update={"data": other_chid})

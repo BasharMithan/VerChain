@@ -11,11 +11,11 @@ POST /register
 {
   "user":       { "name": "Alice", "nationalNumber": 123456, ... },
   "issuer":     { "name": "JPUF", "businessID": 3423 },
-  "credential": { "credentialID": 101, "image": "..." }
+  "credential": { "documentID": 101, "image": "..." }
 }
 ```
 
-The node builds `User -> Authority -> Identity -> CHID -> Block`, mines it, stores the `CHID` on-chain. The full personal data is never written anywhere. It's used to derive the hash and discarded.
+The node builds `User -> Authority -> Credential -> CHID -> Block`, mines it, stores the `CHID` on-chain. The full personal data is never written anywhere. It's used to derive the hash and discarded.
 
 **Verification** - three integers in, ledger search:
 
@@ -23,7 +23,7 @@ The node builds `User -> Authority -> Identity -> CHID -> Block`, mines it, stor
 POST /verify
 {
   "nationalNumber": 123456,
-  "credentialID":   101,
+  "documentID":   101,
   "businessID":     3423
 }
 ```

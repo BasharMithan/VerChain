@@ -5,13 +5,13 @@ from models.APIModels import (VerificationRequest, NodeStatus,
 from pydantic_core import ValidationError
 
 from services.peer import Peer
-from models.Models import NodeMetadata, Identity, Authority, Block, CHID, Query, Response, User, Document
+from models.Models import NodeMetadata, Credential, Authority, Block, CHID, Query, Response, User, Document
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
 from utils.chain.documents import DocumentReceiver
 from validation.chain_validation import ChainValidation
 from errors import DuplicateBlockError, InvalidChainError
-from errors.holderValidationErrors import ConflictingIdentityError
+from errors.holderValidationErrors import ConflictingCredentialError
 from errors.APIErrors import APIError
 from validation.inputValidation import InputValidation
 from configs.baseConfigs import CredentialConstraints
@@ -34,7 +34,7 @@ class APICommunication:
 
         # Looping over the local chain to locate the block that contains all the information.
         user = self.peer.ledger.findUser(verificationRequest.UserID, verificationRequest.user)
-        credential = self.peer.ledger.findCredential(verificationRequest.credentialID)
+        credential = self.peer.ledger.findCredential(verificationRequest.documentID)
         issuer = self.peer.ledger.findIssuer(verificationRequest.issuerID, verificationRequest.issuer)
 
 
@@ -50,7 +50,7 @@ class APICommunication:
 
         
 
-        # execute only if the User, Identity, and the Authority are stored on-chain.
+        # execute only if the User, Credential, and the Authority are stored on-chain.
         query = Query(user=user, credential=credential, issuer=issuer)
         return self.verifier.check(query, self.peer.ledger.blocks)
         
@@ -81,9 +81,8 @@ class APICommunication:
             )
 
 
-            doc = Identity(
-                image=document.documentHash, # TODO: Change it to something else.
-                credentialID=registerationRequest.credentialID,
+            doc = Credential(
+                documentID=registerationRequest.documentID,
                 document=document, CID="" )
 
 
@@ -113,7 +112,7 @@ class APICommunication:
         
         try:
             result: Block | Exception | None = self.peer.registerBlock(block)
-        except (DuplicateBlockError, InvalidChainError, ConflictingIdentityError, ValidationError) as error:
+        except (DuplicateBlockError, InvalidChainError, ConflictingCredentialError, ValidationError) as error:
             result = error
         if result is None:
             return APIError(error = "Block-building-fail", message = "Cannor build the block.")
@@ -124,8 +123,8 @@ class APICommunication:
         elif isinstance(result, InvalidChainError):
             return APIError(error = "Invalid-Chain", message = "Chain integrity failed; chain sync requested.")
 
-        elif isinstance(result, ConflictingIdentityError):
-            return APIError(error = "Conflict-Identity", message = "Check if the input is valid.")
+        elif isinstance(result, ConflictingCredentialError):
+            return APIError(error = "Conflict-Credential", message = "Check if the input is valid.")
 
         elif isinstance(result, ValidationError):
             return APIError(error = "Validation-error", message =  "Input is invalid")

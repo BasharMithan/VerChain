@@ -1,5 +1,5 @@
 
-from models import User, Identity, Authority
+from models import User, Credential, Authority
 from services.ledger import Ledger
 
 from validation.document import DocumentValidation
@@ -31,8 +31,8 @@ class InputValidation:
             
 
     
-    def credentialValidation(self, credential: Identity) -> bool:
-        if self.ledger.findCredential(credential.credentialID) is not None:
+    def credentialValidation(self, credential: Credential) -> bool:
+        if self.ledger.findCredential(credential.documentID) is not None:
             return False
 
         # DocumentValidation()

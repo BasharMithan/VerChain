@@ -7,7 +7,7 @@ from utils.blocks.miner import Miner
 from validation.chain_validation import ChainValidation
 from validation.blockValidation import BlockValidator
 from validation.inputValidation import InputValidation
-from errors.holderValidationErrors import ConflictingIdentityError
+from errors.holderValidationErrors import ConflictingCredentialError
 
 from errors import DuplicateBlockError, BlockPreviousHashError
 
@@ -32,7 +32,7 @@ class BlockManager:
             block.previousHash = self.ledger.getLatestHash()
 
             if not self.inputValidation.holderValidation(user=block.data.user):
-                raise ConflictingIdentityError(nationalNumber=block.data.user.nationalNumber, existingName="", incomingName="")
+                raise ConflictingCredentialError(nationalNumber=block.data.user.nationalNumber, existingName="", incomingName="")
 
             if self.checkIfBlockExists(block.data.chid, self.ledger.blocks):
                 Logger.warning(f"[Block validation] The block {block.index} already in the ledger!")

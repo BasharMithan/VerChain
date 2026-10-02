@@ -19,7 +19,7 @@ security vulnerability, please report it privately.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 Public disclosure before a fix is available could put VerChain users,
-identity data, wallets, or deployed contracts at risk.
+Credential data, wallets, or deployed contracts at risk.
 
 ### Preferred reporting method
 
@@ -45,10 +45,10 @@ Please provide enough information for us to reproduce and assess the issue:
 - The affected version, commit hash, branch, deployment network, or contract address.
 - Reproduction steps or a minimal proof of concept.
 - The expected behavior and the actual behavior.
-- The potential impact, such as unauthorized identity verification, access-control bypass, private-data exposure, signature replay, token theft, or denial of service.
+- The potential impact, such as unauthorized Credential verification, access-control bypass, private-data exposure, signature replay, token theft, or denial of service.
 - Suggested mitigations, if you have them.
 
-Please do not include secrets, private keys, seed phrases, real identity documents,
+Please do not include secrets, private keys, seed phrases, real Credential documents,
 access tokens, or production credentials in your report.
 
 ## Scope
@@ -56,7 +56,7 @@ access tokens, or production credentials in your report.
 Examples of security issues that may be in scope include:
 
 - Authentication or authorization bypasses.
-- Broken identity-verification or credential-validation logic.
+- Broken Credential-verification or credential-validation logic.
 - Exposure of personally identifiable information or sensitive verification data.
 - Smart-contract vulnerabilities, including access-control errors, reentrancy,
   signature-validation flaws, replay attacks, or incorrect permission checks.
@@ -88,7 +88,7 @@ When testing VerChain, please act responsibly:
 - Do not disrupt VerChain services or conduct denial-of-service testing.
 - Do not publish exploit details until we have had a reasonable opportunity to
   investigate and release a fix.
-- Do not use a discovered vulnerability for financial gain, identity fraud, or
+- Do not use a discovered vulnerability for financial gain, Credential fraud, or
   unauthorized access.
 
 ## Disclosure Process

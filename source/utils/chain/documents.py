@@ -21,8 +21,8 @@ class DocumentReceiver:
 
 
 
-    async def receive(self, uploadedFile: UploadFile, credentialID: int) -> Document:
-        self.credentialID = credentialID
+    async def receive(self, uploadedFile: UploadFile, documentID: int) -> Document:
+        self.documentID = documentID
         filename = uploadedFile.filename or ""
         fileFormat = Path(filename).suffix.lower()
 
@@ -56,7 +56,7 @@ class DocumentReceiver:
             documentTitle="Credential document", documentType=uploadedFile.content_type,
             documentContentSize=uploadedFile.size or 0,
             documentHash=hashlib.sha256(
-                content + b":" + fileFormat.encode("utf-8") + b":" + str(self.credentialID).encode("utf-8")
+                content + b":" + fileFormat.encode("utf-8") + b":" + str(self.documentID).encode("utf-8")
             ).hexdigest(),
             )
 
