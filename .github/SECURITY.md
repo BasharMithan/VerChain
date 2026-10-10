@@ -114,6 +114,6 @@ a security advisory, or the project's acknowledgements.
 
 - GitHub private vulnerability reporting: Use the repository's **Security**
   tab, if enabled.
-- Security email: `basharmithan@proton.me`
+- Security email: `basharmithan@gmail.com`
 - General project issues: Use GitHub Issues for non-security bugs and feature
   requests only.
