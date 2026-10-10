@@ -132,7 +132,7 @@ def test_should_broadcast_allows_a_different_chid(blockManager, unminedBlock):
     other_chid = CHID(
         user=other_user,
         credential=Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
             documentID=2,
         ),
         issuer=Authority(name="OtherAuth", businessID=2),

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
-from models.Models import NodeMetadata
+from models.Models import NodeMetadata, Document
 from typing import Annotated
 from fastapi import Form, UploadFile, File
 
@@ -49,7 +49,8 @@ class APIRegisterationResponse(BaseModel):
 
 class VerificationRequest(BaseModel):
     user: str # User.name
-    UserID: int # User.nationalNumber
+    userID: int # User.nationalNumber
+    document: Document
     documentID: int # Credential.documentID
     issuer: str # Authority.name
     issuerID: int # Authority.businessID

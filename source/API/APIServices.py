@@ -33,8 +33,8 @@ class APICommunication:
 
 
         # Looping over the local chain to locate the block that contains all the information.
-        user = self.peer.ledger.findUser(verificationRequest.UserID, verificationRequest.user)
-        credential = self.peer.ledger.findCredential(verificationRequest.documentID)
+        user = self.peer.ledger.findUser(verificationRequest.userID, verificationRequest.user)
+        credential = self.peer.ledger.findCredential(verificationRequest.document.documentHash)
         issuer = self.peer.ledger.findIssuer(verificationRequest.issuerID, verificationRequest.issuer)
 
 
@@ -42,7 +42,6 @@ class APICommunication:
             return APIError(error="User-not-found", message="The input user is not registered.")
 
         if not credential:
-            
             return APIError(error="Credential-not-found", message="The input credential is not registered.")
 
         if not issuer:

@@ -50,6 +50,15 @@ def test_reload_from_disk_matches_in_memory(ledgerWithTwoBlocks):
     assert reloaded.blocks[-1]["hash"] == ledgerWithTwoBlocks.blocks[-1]["hash"]
 
 
+def test_credentials_are_loaded_from_ledger_by_document_hash(ledgerWithTwoBlocks):
+    ledger = Ledger(filePath=ledgerWithTwoBlocks.filePath)
+
+    for block in ledger.blocks:
+        credential_hash = block["data"]["credential"]["document"]["documentHash"]
+        if credential_hash:
+            assert credential_hash in ledger.credentials
+            assert ledger.findCredential(credential_hash) is not None
+
 
 def test_corrupt_ledger_file_raises_on_load(tempLedgerPath):
     # Write a bare JSON object instead of a list
@@ -66,12 +75,10 @@ def test_malformed_json_raises_on_load(tempLedgerPath):
         Ledger(filePath=tempLedgerPath)
 
 
-def test_invalid_document_content_encoding_raises_ledger_corrupt(tempLedgerPath):
+def test_invalid_document_content_size_raises_ledger_corrupt(tempLedgerPath):
     Ledger(filePath=tempLedgerPath)
     blocks = json.loads(tempLedgerPath.read_text())
-    blocks[0]["data"]["credential"]["document"]["documentContent"] = (
-        "<coroutine object UploadFile.read at 0x00000123456789AB>"
-    )
+    blocks[0]["data"]["credential"]["document"]["documentContentSize"] = "not-an-int"
     tempLedgerPath.write_text(json.dumps(blocks))
 
     with pytest.raises(LedgerCorruptError):
@@ -95,7 +102,7 @@ def test_insert_on_invalid_chain_raises(ledgerWithTwoBlocks):
     user = User(name="Unique", nationalNumber=9999, phone=9, age=40, email="test@bc.io", birth="")
     auth = Authority(name="B", businessID=2)
     doc  = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=9,
     )
     chid = CHID(user=user, credential=doc, issuer=auth)

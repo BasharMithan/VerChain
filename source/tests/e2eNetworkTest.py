@@ -59,7 +59,7 @@ def _makeBlock(tag: str, nationalNumber: int, documentID: int, businessID: int) 
     user = User(name=f"User-{tag}", nationalNumber=nationalNumber, phone=1, age=25, email="test@bc.io", birth="")
     auth = Authority(name=f"Auth-{tag}", businessID=businessID)
     doc = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=documentID,
     )
     chid = CHID(user=user, credential=doc, issuer=auth)
@@ -117,7 +117,7 @@ def test_verification_succeeds_on_peer_that_did_not_originate_block(spawnPeer):
     chid = CHID(
         user=User(name="Remote", nationalNumber=3003, phone=1, age=40, email="test@bc.io", birth=""),
         credential=Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
             documentID=3,
         ),
         issuer=Authority(name="RemoteAuth", businessID=30),

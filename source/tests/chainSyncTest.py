@@ -148,7 +148,7 @@ def ledger_with_one_block(tmp_path):
     user = User(name="SyncUser1", nationalNumber=111, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name="SyncAuthority", businessID=1)
     credential = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=1,
     )
     chid = CHID(user=user, credential=credential, issuer=auth)
@@ -169,7 +169,7 @@ def ledger_with_two_blocks(tmp_path):
         user = User(name=f"SyncUser_{idx}", nationalNumber=100 + idx, phone=idx, age=20, email="", birth="")
         auth = Authority(name="SyncAuthority", businessID=idx)
         credential = Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentHash=""),
             documentID=idx,
         )
         chid = CHID(user=user, credential=credential, issuer=auth)
@@ -298,7 +298,7 @@ def test_receive_updates_ledger_with_longer_valid_chain(tmp_path):
         user = User(name=f"RemoteUser_{idx}", nationalNumber=300 + idx, phone=idx, age=25, email="test@bc.io", birth="")
         auth = Authority(name="RemoteAuth", businessID=10 + idx)
         credential = Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
             documentID=idx,
             CID="",
         )
@@ -342,7 +342,7 @@ def test_receive_does_not_replace_with_shorter_chain(tmp_path):
         user = User(name=f"LocalUser_{idx}", nationalNumber=400 + idx, phone=idx, age=25, email="test@bc.io", birth="")
         auth = Authority(name="LocalAuth", businessID=20 + idx)
         credential = Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
             documentID=idx,
         )
         chid = CHID(user=user, credential=credential, issuer=auth)

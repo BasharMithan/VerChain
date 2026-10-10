@@ -153,7 +153,7 @@ class Performance:
             user = users[i]
             auth = Authority(name=f"Auth-{count + i}", businessID=200000 + i)
             doc = Credential(
-                document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+                document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
                 documentID=300000 + i,
             )
             chid = CHID(user=user, issuer=auth, credential=doc)

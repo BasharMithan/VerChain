@@ -14,3 +14,11 @@ class UploadedDocumentNotSupported(Exception):
     def __init__(self, supported_formats: set[str] | None = None) -> None:
         self.supported_formats = supported_formats if supported_formats is not None else CredentialConstraints().supportedCredentialFormats
         super().__init__("Unsupported credential format")
+        
+
+
+class InvalidPDFContent(Exception):
+    def __init__(self, filename: str) -> None:
+        super().__init__(
+            f"The uploaded file: `{filename}` has ivalid content."
+        )

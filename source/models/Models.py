@@ -55,9 +55,8 @@ class Authority(BaseModel):
 class Document(BaseModel):
     model_config = ConfigDict(ser_json_bytes="base64", val_json_bytes="base64")
 
-    documentTitle: str | None = None
-    documentContent: bytes | None = None
-    documentFormat: str | None = None
+    documentTitle: str 
+    documentFormat: str
     documentContentSize: int = 0
     documentHash: str = ""
 

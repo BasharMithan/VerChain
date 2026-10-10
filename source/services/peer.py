@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     user1  = User(name="Local", nationalNumber=1111, phone=1, age=30, email="", birth="")
     doc1   = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=1,
     )
     block1 = Block(data=CHID(user=user1, credential=doc1, issuer=issuer))

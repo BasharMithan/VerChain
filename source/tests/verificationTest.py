@@ -11,7 +11,7 @@ def _makeChid(nationalNumber: int, documentID: int, businessID: int, tag: str = 
     user = User(name=f"User{tag}", nationalNumber=nationalNumber, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name=f"Auth{tag}", businessID=businessID)
     doc = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=documentID,
     )
     return CHID(user=user, credential=doc, issuer=auth)
@@ -116,7 +116,7 @@ def test_check_declines_when_only_partial_match(ledgerA: Ledger):
 
     # Same user, but different credential/issuer -> different CHID
     mismatchedCredential = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=999,
     )
     mismatchedIssuer = Authority(name="Different", businessID=999)

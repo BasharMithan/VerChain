@@ -20,7 +20,7 @@ from configs.baseConfigs import CredentialConstraints
 from models.Models import Document
 from validation.documents import DocumentValidation
 
-from errors.documents import UploadedDocumentTooLarge, UploadedDocumentNotSupported
+from errors.documents import UploadedDocumentTooLarge, UploadedDocumentNotSupported, InvalidPDFContent
 
 
 class DocumentReceiver:
@@ -30,7 +30,7 @@ class DocumentReceiver:
         self.constraints = constraints or CredentialConstraints()
         self.document = document
 
-    async def receive(self, uploadedFile: UploadFile, documentID: int) -> Document:
+    async def receive(self, uploadedFile: UploadFile) -> Document:
         "Builds the ``Document`` model from the ``UploadFile``"
 
         filename = uploadedFile.filename or ""
@@ -40,19 +40,18 @@ class DocumentReceiver:
         document = Document(
             documentTitle="Credential document",
             documentFormat=fileFormat,
-            documentContent=content,
             documentContentSize=len(content),
         )
 
         try:
-            documentValidation = DocumentValidation(document=document, constraints=self.constraints)
-            documentValidation.validate()
-        except (UploadedDocumentTooLarge, UploadedDocumentNotSupported) as error:
-            raise ValueError(str(error)) from error
-        except ValueError as error:
+            DocumentValidation(document=document, content=content, constraints=self.constraints).validate()
+        except (UploadedDocumentTooLarge, UploadedDocumentNotSupported, InvalidPDFContent, ValueError) as error:
             raise ValueError(str(error)) from error
 
-        documentHashBuilder = DocumentHashing(document=document, documentID=documentID)
+
+        
+
+        documentHashBuilder = DocumentHashing(document=document, content=content)
         hashedDocument: Document = documentHashBuilder.hash()
 
         return hashedDocument
@@ -81,15 +80,15 @@ class DocumentReceiver:
 
 
 class DocumentHashing:
-    def __init__(self, document: Document, documentID: int) -> None:
-        self.documentID = documentID
+    def __init__(self, document: Document, content: bytes) -> None:
         self.document = document
+        self.content = content
 
     def hash(self) -> Document:
-        payload = self.document.documentContent or b""
+        # payload = self.document.documentContent or b""
         file_format = (self.document.documentFormat or "").encode("utf-8")
         documentHash = hashlib.sha256(
-            payload + b":" + file_format + b":" + str(self.documentID).encode("utf-8")
+            self.content + b":" + file_format
         ).hexdigest()
 
         self.document.documentHash = documentHash

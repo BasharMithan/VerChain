@@ -44,7 +44,7 @@ def buildRouter(peer: Peer) -> APIRouter:
         })
         try:
             documentReceiver = DocumentReceiver(document=document)
-            receivedDocument = await documentReceiver.receive(uploadedFile=registerationRequest.document, documentID=registerationRequest.documentID)
+            receivedDocument = await documentReceiver.receive(uploadedFile=document)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -70,7 +70,29 @@ def buildRouter(peer: Peer) -> APIRouter:
         }
 
     @router.post("/check")
-    def check(payload: VerificationRequest):
+    async def check(
+              username: Annotated[str, Form(alias="username")],
+              userID: Annotated[int, Form(alias="userID")],
+              document: Annotated[UploadFile, File(alias="document")],
+              documentID: Annotated[int, Form(alias="documentID")],
+              issuer: Annotated[str, Form(alias="issuer")],
+              issuerID: Annotated[int, Form(alias="issuerID")]):
+              
+        try:
+            documentReceiver = DocumentReceiver(document=document)
+            receivedDocument = await documentReceiver.receive(uploadedFile=document)
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+
+        payload = VerificationRequest(
+            user=username,
+            userID=userID,
+            document=receivedDocument,
+            documentID=documentID,
+            issuer=issuer,
+            issuerID=issuerID
+        )
+ 
 
         result: Response | APIError = communication.processVerificationRequest(payload)
 

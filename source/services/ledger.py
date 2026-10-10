@@ -5,7 +5,6 @@ from typing import Any
 from pydantic import ValidationError
 
 from utils.logger import Logger
-from validation.blockValidation import BlockValidator
 from validation.chain_validation import ChainValidation
 from utils.blocks.miner import Miner
 from models.Models import Block, CHID, Authority, User, Credential, Document
@@ -41,10 +40,8 @@ class Ledger():
         self.usersByNationalNumber: dict[int, User] = {}
         self.usersByUsername: dict[str, User] = {}
 
-        self.credentials: dict[int, Credential] = {}
+        self.credentials: dict[str, Credential] = {}
         self.issuers: dict[int, Authority] = {}
-
-        self.loadFromLedger()
 
         self.miner = Miner()
 
@@ -55,6 +52,7 @@ class Ledger():
         self.__ensureGenesis()
 
         self.loadFromLedger()
+
 
         if not self.chainValidation.validate():
             self.shouldRequestChain = True
@@ -134,7 +132,7 @@ class Ledger():
             self.blocks.append(blockAsDict)
 
             self.users[block.data.user.nationalNumber] = block.data.user
-            self.credentials[block.data.credential.documentID] = block.data.credential
+            self.credentials[block.data.credential.document.documentHash] = block.data.credential
             self.issuers[block.data.issuer.businessID] = block.data.issuer
 
             self.__writeBlockToLedger(blockAsDict)
@@ -164,7 +162,7 @@ class Ledger():
         user=User(name="Gensis-Block", nationalNumber=0, phone=0, age=0, email="gensis@blockchain.io", birth="")
         auth = Authority(name="", businessID=0)
         doc = Credential(
-            document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+            document=Document(documentFormat="text/plain", documentTitle="", documentHash=""),
             documentID=0,
         )
         chid = CHID(user=user, credential=doc, issuer=auth)
@@ -187,12 +185,19 @@ class Ledger():
         """Reads the local ledger and stores the user, credentials, and issuers' indecies
         to build the index tables."""
 
+        self.users.clear()
+        self.usersByNationalNumber.clear()
+        self.usersByUsername.clear()
+        self.credentials.clear()
+        self.issuers.clear()
+
         try:
             for block in self.blocks:
                 self.users[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
                 self.usersByNationalNumber[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
 
-                self.credentials[block["data"]["credential"]["documentID"]] = Credential.model_validate(block["data"]["credential"])
+                documentHash = block["data"]["credential"]["document"]["documentHash"]
+                self.credentials[documentHash] = Credential.model_validate(block["data"]["credential"])
                 self.issuers[block["data"]["issuer"]["businessID"]] = Authority.model_validate(block["data"]["issuer"])
         except ValidationError as error:
             raise LedgerCorruptError(str(self.filePath)) from error
@@ -211,7 +216,7 @@ class Ledger():
         self.shouldRequestChain = False
         
         self.users: dict[int, User] = {}
-        self.credentials: dict[int, Credential] = {}
+        self.credentials: dict[str, Credential] = {}
         self.issuers: dict[int, Authority] = {}
 
         self.loadFromLedger()
@@ -228,8 +233,8 @@ class Ledger():
         return None
 
 
-    def findCredential(self, documentID: int) -> Credential | None:
-        return self.credentials.get(documentID, None)
+    def findCredential(self, documentHash: str) -> Credential | None:
+        return self.credentials.get(documentHash, None)
 
     def findIssuer(self, issuerID: int, issuerName: str) -> Authority | None:
         issuer = self.issuers.get(issuerID, None)

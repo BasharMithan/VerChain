@@ -11,7 +11,7 @@ def unminedBlock():
     user = User(name="Test", nationalNumber=1, phone=1, age=20, email="test@bc.io", birth="")
     auth = Authority(name="TestAuth", businessID=1)
     doc = Credential(
-        document=Document(documentContent=b"", documentFormat="text/plain", documentTitle="", documentHash=""),
+        document=Document(documentFormat="text/plain", documentTitle="", documentContentSize=0, documentHash=""),
         documentID=1,
     )
     chid = CHID(user=user, credential=doc, issuer=auth)
