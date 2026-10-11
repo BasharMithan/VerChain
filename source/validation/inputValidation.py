@@ -2,7 +2,7 @@
 from models import User, Credential, Authority
 from services.ledger import Ledger
 
-from validation.document import DocumentValidation
+from validation.documents import DocumentValidation
 
 
 class InputValidation:
