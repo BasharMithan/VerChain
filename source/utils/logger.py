@@ -1,16 +1,13 @@
 from pathlib import Path
-
 import logging as Logger
 
-# Encure that the storage folder exists
-storageFolder = Path("storage")
-storageFolder.mkdir(exist_ok=True)
-
+# Make sure the storage folder next to the project root exists.
+logFile = Path(__file__).resolve().parents[2] / "storage" / "log.log"
+logFile.parent.mkdir(parents=True, exist_ok=True)
 
 Logger.basicConfig(
-    filename=str(Path(__file__).resolve().parents[2] / 'storage' / 'log.log'), 
-
-    filemode='a', # 'a' to append logs, 'w' to overwrite the file each run
-    level=Logger.DEBUG, # Lowest severity level to capture
-    format='%(asctime)s - %(levelname)s - %(message)s' # Human-readable format
+    filename=str(logFile),
+    filemode="a",
+    level=Logger.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
