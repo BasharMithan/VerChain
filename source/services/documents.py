@@ -38,7 +38,7 @@ class DocumentReceiver:
 
         document = Document(
             documentTitle="Credential document",
-            documentFormat=fileFormat.lower(),
+            documentFormat=fileFormat,
             documentContentSize=len(content),
         )
 
