@@ -20,5 +20,5 @@ class UploadedDocumentNotSupported(Exception):
 class InvalidPDFContent(Exception):
     def __init__(self, filename: str) -> None:
         super().__init__(
-            f"The uploaded file: `{filename}` has ivalid content."
+            f"The uploaded file: `{filename}` has invalid content."
         )

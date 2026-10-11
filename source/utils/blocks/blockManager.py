@@ -8,6 +8,7 @@ from validation.chain_validation import ChainValidation
 from validation.blockValidation import BlockValidator
 from validation.inputValidation import InputValidation
 from errors.holderValidationErrors import ConflictingCredentialError
+from errors.credentialErrors import DuplicateCredentialIDError
 
 from errors import DuplicateBlockError, BlockPreviousHashError
 
@@ -33,6 +34,9 @@ class BlockManager:
 
             if not self.inputValidation.holderValidation(user=block.data.user):
                 raise ConflictingCredentialError(nationalNumber=block.data.user.nationalNumber, existingName="", incomingName="")
+
+            if not self.inputValidation.credentialValidation(block.data.credential):
+                raise DuplicateCredentialIDError(block.data.credential.documentID)
 
             if self.checkIfBlockExists(block.data.chid, self.ledger.blocks):
                 Logger.warning(f"[Block validation] The block {block.index} already in the ledger!")

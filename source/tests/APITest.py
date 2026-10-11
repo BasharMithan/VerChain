@@ -153,6 +153,27 @@ def test_register_duplicate_returns_409(apiClient):
     assert second.status_code == 409
 
 
+def test_register_rejects_document_id_collision_across_different_credentials(apiClient):
+    client, peer = apiClient
+    first = _postRegister(
+        client,
+        _registerPayload(1012, 12, 22, name="First"),
+        content=_pdfWithText("First credential"),
+    )
+    second = _postRegister(
+        client,
+        _registerPayload(1013, 12, 23, name="Second"),
+        content=_pdfWithText("Second credential"),
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+    assert len(peer.ledger.credentialsByDocumentID) == 1
+    assert peer.ledger.findCredentialByDocumentID(12) is not None
+    reloaded = type(peer.ledger)(filePath=peer.ledger.filePath)
+    assert reloaded.findCredentialByDocumentID(12) is not None
+
+
 def test_register_missing_field_returns_422(apiClient):
     client, _ = apiClient
     res = client.post("/register", data={"user.name": "Bob"})
@@ -173,9 +194,8 @@ def test_register_stores_hash_of_content_and_extension(apiClient):
     client, _ = apiClient
     content = _validPdf()
     res = _postRegister(client, _registerPayload(1004, 4, 13), content=content)
-    print(res.json()["data"]["credential"]["document"])
     assert res.status_code == 201
-    expected = hashlib.sha256(content + b":" + b".pdf").hexdigest()
+    expected = hashlib.sha256(content + b":" + b".pdf" + b":" + str(4).encode()).hexdigest()
     assert res.json()["data"]["credential"]["document"]["documentHash"] == expected
 
 
@@ -256,8 +276,54 @@ def test_check_returns_error_when_identifiers_unknown(apiClient):
         issuerID=999999,
         document_content=_pdfWithText("Unknown credential"),
     )
-    assert res.status_code == 200
-    assert res.json()["error"] == "User-not-found"
+    assert res.status_code == 404
+    assert res.json()["detail"]["error"] == "User-not-found"
+
+
+def test_check_returns_404_for_unknown_credential_id(apiClient):
+    client, _ = apiClient
+    document = _pdfWithText("Registered credential")
+    _postRegister(
+        client,
+        _registerPayload(4010, 41, 410, name="Known", issuerName="Known issuer"),
+        content=document,
+    )
+
+    response = _postCheck(
+        client,
+        username="Known",
+        userID=4010,
+        documentID=42,
+        issuer="Known issuer",
+        issuerID=410,
+        document_content=document,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["error"] == "Credential-not-found"
+
+
+def test_check_returns_404_for_unknown_issuer(apiClient):
+    client, _ = apiClient
+    document = _pdfWithText("Registered credential")
+    _postRegister(
+        client,
+        _registerPayload(4020, 43, 420, name="Known", issuerName="Known issuer"),
+        content=document,
+    )
+
+    response = _postCheck(
+        client,
+        username="Known",
+        userID=4020,
+        documentID=43,
+        issuer="Unknown issuer",
+        issuerID=421,
+        document_content=document,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["error"] == "Issuer-not-found"
 
 
 

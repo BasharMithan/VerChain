@@ -32,7 +32,7 @@ class InputValidation:
 
     
     def credentialValidation(self, credential: Credential) -> bool:
-        if self.ledger.findCredential(credential.documentID) is not None:
+        if self.ledger.findCredentialByDocumentID(credential.documentID) is not None:
             return False
 
         # DocumentValidation()

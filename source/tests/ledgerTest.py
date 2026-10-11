@@ -14,6 +14,8 @@ def test_fresh_ledger_has_genesis(tempLedgerPath):
     assert len(ledger.blocks) == 1
     assert ledger.blocks[0]["index"] == 0
     assert ledger.blocks[0]["previousHash"] == "0" * 64
+    assert "" not in ledger.credentials
+    assert 0 not in ledger.credentialsByDocumentID
 
 
 def test_genesis_is_mined_and_hash_valid(tempLedgerPath):
@@ -76,12 +78,14 @@ def test_malformed_json_raises_on_load(tempLedgerPath):
 
 
 def test_invalid_document_content_size_raises_ledger_corrupt(tempLedgerPath):
+    from pydantic import ValidationError
+
     Ledger(filePath=tempLedgerPath)
     blocks = json.loads(tempLedgerPath.read_text())
     blocks[0]["data"]["credential"]["document"]["documentContentSize"] = "not-an-int"
     tempLedgerPath.write_text(json.dumps(blocks))
 
-    with pytest.raises(LedgerCorruptError):
+    with pytest.raises(ValidationError):
         Ledger(filePath=tempLedgerPath)
 
 

@@ -8,11 +8,12 @@ from services.peer import Peer
 from models.Models import NodeMetadata, Credential, Authority, Block, CHID, Query, Response, User, Document
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
-from utils.chain.documents import DocumentReceiver
+from services.documents import DocumentReceiver
 from validation.chain_validation import ChainValidation
 from errors import DuplicateBlockError, InvalidChainError
 from errors.holderValidationErrors import ConflictingCredentialError
 from errors.APIErrors import APIError
+from errors.credentialErrors import DuplicateCredentialIDError
 from validation.inputValidation import InputValidation
 from configs.baseConfigs import CredentialConstraints
 
@@ -111,13 +112,16 @@ class APICommunication:
         
         try:
             result: Block | Exception | None = self.peer.registerBlock(block)
-        except (DuplicateBlockError, InvalidChainError, ConflictingCredentialError, ValidationError) as error:
+        except (DuplicateBlockError, DuplicateCredentialIDError, InvalidChainError, ConflictingCredentialError, ValidationError) as error:
             result = error
         if result is None:
             return APIError(error = "Block-building-fail", message = "Cannor build the block.")
         
         if isinstance(result, DuplicateBlockError):
             return APIError(error="Block-duplication-error", message="Block already exists.")
+
+        elif isinstance(result, DuplicateCredentialIDError):
+            return APIError(error="Duplicate-Credential-ID", message=str(result))
 
         elif isinstance(result, InvalidChainError):
             return APIError(error = "Invalid-Chain", message = "Chain integrity failed; chain sync requested.")
@@ -159,6 +163,5 @@ class APICommunication:
     @staticmethod
     def sendChain(node: NodeMetadata, blockManager: BlockManager) -> ChainModel:
         return ChainModel(sender=node, chain=blockManager.ledger.blocks)
-
 
 
