@@ -21,6 +21,7 @@ from errors import (
     )
 
 from errors.blockErrors import BlockIntegrationError
+from errors.credentialErrors import DuplicateCredentialIDError
 
 from configs import settings, Performance
 
@@ -41,6 +42,7 @@ class Ledger():
         self.usersByUsername: dict[str, User] = {}
 
         self.credentials: dict[str, Credential] = {}
+        self.credentialsByDocumentID: dict[int, Credential] = {}
         self.issuers: dict[int, Authority] = {}
 
         self.miner = Miner()
@@ -110,6 +112,12 @@ class Ledger():
 
     def insertBlock(self, block: Block) -> Block:
         with self._lock:
+            credential = block.data.credential
+            if (
+                credential.document.documentHash
+                and credential.documentID in self.credentialsByDocumentID
+            ):
+                raise DuplicateCredentialIDError(credential.documentID)
 
             blockAsDict = json.loads(Block.model_dump_json(block))
             blockChid = blockAsDict.get("data", {}).get("chid")
@@ -132,7 +140,10 @@ class Ledger():
             self.blocks.append(blockAsDict)
 
             self.users[block.data.user.nationalNumber] = block.data.user
-            self.credentials[block.data.credential.document.documentHash] = block.data.credential
+            documentHash = credential.document.documentHash
+            if documentHash:
+                self.credentials[documentHash] = credential
+                self.credentialsByDocumentID[credential.documentID] = credential
             self.issuers[block.data.issuer.businessID] = block.data.issuer
 
             self.__writeBlockToLedger(blockAsDict)
@@ -189,6 +200,7 @@ class Ledger():
         self.usersByNationalNumber.clear()
         self.usersByUsername.clear()
         self.credentials.clear()
+        self.credentialsByDocumentID.clear()
         self.issuers.clear()
 
         try:
@@ -197,7 +209,14 @@ class Ledger():
                 self.usersByNationalNumber[block["data"]["user"]["nationalNumber"]] = User.model_validate(block["data"]["user"])
 
                 documentHash = block["data"]["credential"]["document"]["documentHash"]
-                self.credentials[documentHash] = Credential.model_validate(block["data"]["credential"])
+                if documentHash:
+                    credential = Credential.model_validate(block["data"]["credential"])
+                    if credential.documentID in self.credentialsByDocumentID:
+                        raise LedgerCorruptError(
+                            f"Credential documentID {credential.documentID} is duplicated in the ledger."
+                        )
+                    self.credentials[documentHash] = credential
+                    self.credentialsByDocumentID[credential.documentID] = credential
                 self.issuers[block["data"]["issuer"]["businessID"]] = Authority.model_validate(block["data"]["issuer"])
         except ValidationError as error:
             raise LedgerCorruptError(str(self.filePath)) from error
@@ -217,6 +236,7 @@ class Ledger():
         
         self.users: dict[int, User] = {}
         self.credentials: dict[str, Credential] = {}
+        self.credentialsByDocumentID: dict[int, Credential] = {}
         self.issuers: dict[int, Authority] = {}
 
         self.loadFromLedger()
@@ -236,6 +256,9 @@ class Ledger():
     def findCredential(self, documentHash: str) -> Credential | None:
         return self.credentials.get(documentHash, None)
 
+    def findCredentialByDocumentID(self, documentID: int) -> Credential | None:
+        return self.credentialsByDocumentID.get(documentID)
+
     def findIssuer(self, issuerID: int, issuerName: str) -> Authority | None:
         issuer = self.issuers.get(issuerID, None)
 
@@ -246,7 +269,6 @@ class Ledger():
             return issuer
         
         else: return None
-
 
 
 

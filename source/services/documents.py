@@ -14,7 +14,6 @@ Description: Contains the document (credential) related services/utils.
 import hashlib
 from pathlib import Path
 from fastapi import UploadFile
-from pymupdf import pymupdf
 
 from configs.baseConfigs import CredentialConstraints
 from models.Models import Document
@@ -26,20 +25,20 @@ from errors.documents import UploadedDocumentTooLarge, UploadedDocumentNotSuppor
 class DocumentReceiver:
     """Validate an uploaded credential and return its content digest."""
 
-    def __init__(self, document: UploadFile, constraints: CredentialConstraints | None = None) -> None:
-        self.constraints = constraints or CredentialConstraints()
-        self.document = document
+    def __init__(self, constraints: CredentialConstraints) -> None:
+        self.constraints = constraints
 
-    async def receive(self, uploadedFile: UploadFile) -> Document:
+
+    async def receive(self, uploadedFile: UploadFile, documentID: int) -> Document:
         "Builds the ``Document`` model from the ``UploadFile``"
 
         filename = uploadedFile.filename or ""
         fileFormat = Path(filename).suffix.lower()
-        content = await self.read()
+        content = await self.read(uploadedFile)
 
         document = Document(
             documentTitle="Credential document",
-            documentFormat=fileFormat,
+            documentFormat=fileFormat.lower(),
             documentContentSize=len(content),
         )
 
@@ -49,52 +48,39 @@ class DocumentReceiver:
             raise ValueError(str(error)) from error
 
 
-        
-
-        documentHashBuilder = DocumentHashing(document=document, content=content)
+        documentHashBuilder = DocumentHashing(document=document, content=content, documentID=documentID)
         hashedDocument: Document = documentHashBuilder.hash()
 
         return hashedDocument
 
-
-
         
 
-    async def read(self) -> bytes:
+    async def read(self, file: UploadFile) -> bytes:
         "Reads the received document and returns it's content (bytes)."
-        if self.document is None:
-            return b""
-
-        file_handle = getattr(self.document, "file", None)
-        if file_handle is None:
-            return b""
-
         try:
-            file_handle.seek(0)
-            return file_handle.read()
+            await file.seek(0)
+            return await file.read(self.constraints.maxUploadSize + 1)
         finally:
-            file_handle.seek(0)
+            await file.seek(0)
 
     
 
 
 
 class DocumentHashing:
-    def __init__(self, document: Document, content: bytes) -> None:
+    def __init__(self, document: Document, content: bytes, documentID: int) -> None:
         self.document = document
         self.content = content
+        self.ID = str(documentID).encode()
 
     def hash(self) -> Document:
-        # payload = self.document.documentContent or b""
         file_format = (self.document.documentFormat or "").encode("utf-8")
         documentHash = hashlib.sha256(
-            self.content + b":" + file_format
+            self.content + b":" + file_format + b":" + self.ID
         ).hexdigest()
 
         self.document.documentHash = documentHash
 
         return self.document
-
-
 
 

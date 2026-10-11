@@ -25,3 +25,4 @@ from errors.actionErrors import (
 from errors.chainSyncErrors import (
     ReceivedChainIsInvalid
 )
+from errors.credentialErrors import DuplicateCredentialIDError

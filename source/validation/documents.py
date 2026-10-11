@@ -35,13 +35,18 @@ class DocumentValidation:
 
         # Checking if the file format is .pdf, but dosen't contain a valid .pdf content.
         if self.document.documentFormat == ".pdf":
+            if not self.content.startswith(b"%PDF-"):
+                raise InvalidPDFContent(filename=self.document.documentTitle)
+
             try:
                 with pymupdf.open(stream=self.content, filetype="pdf") as opened_document:
-                    if not getattr(opened_document, "is_pdf", False):
+                    if (
+                        not getattr(opened_document, "is_pdf", False)
+                        or opened_document.needs_pass
+                    ):
                         raise InvalidPDFContent(filename=self.document.documentTitle)
             except (pymupdf.FileDataError, ValueError) as error:
                 raise InvalidPDFContent(filename=self.document.documentTitle) from error
 
         # TODO: Implement a document format-based router.
-
 

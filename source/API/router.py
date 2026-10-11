@@ -8,8 +8,8 @@ from models.Models import Response
 from API.APIServices import APICommunication
 from errors.APIErrors import APIError
 from configs.handler import configs
-# from utils.chain.documents import DocumentReceiver
 from services.documents import DocumentReceiver
+from configs.baseConfigs import CredentialConstraints
 
 
 def buildRouter(peer: Peer) -> APIRouter:
@@ -43,8 +43,8 @@ def buildRouter(peer: Peer) -> APIRouter:
             "credential.document": document,
         })
         try:
-            documentReceiver = DocumentReceiver(document=document)
-            receivedDocument = await documentReceiver.receive(uploadedFile=document)
+            documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
+            receivedDocument = await documentReceiver.receive(uploadedFile=document, documentID=documentID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -79,8 +79,8 @@ def buildRouter(peer: Peer) -> APIRouter:
               issuerID: Annotated[int, Form(alias="issuerID")]):
               
         try:
-            documentReceiver = DocumentReceiver(document=document)
-            receivedDocument = await documentReceiver.receive(uploadedFile=document)
+            documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
+            receivedDocument = await documentReceiver.receive(uploadedFile=document, documentID=documentID)
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -97,7 +97,10 @@ def buildRouter(peer: Peer) -> APIRouter:
         result: Response | APIError = communication.processVerificationRequest(payload)
 
         if isinstance(result, APIError):
-            return result
+            raise HTTPException(
+                status_code=404,
+                detail={"error": result.error, "message": result.message},
+            )
 
         return result
         

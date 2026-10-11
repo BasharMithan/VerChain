@@ -14,6 +14,7 @@ from models.Models import (Action, Block, NodeMetadata, Payload, Document)
 from utils.nodeStorageManager import NodeStorageManager
 from utils.blocks.blockManager import BlockManager
 from errors.holderValidationErrors import ConflictingCredentialError
+from errors.credentialErrors import DuplicateCredentialIDError
 from services.ledger import Ledger
 from services.network import Network
 from models.network import NetworkContext
@@ -164,6 +165,9 @@ class Peer:
 
         except DuplicateBlockError:
             return DuplicateBlockError(block.data.chid)
+
+        except DuplicateCredentialIDError:
+            return DuplicateCredentialIDError(block.data.credential.documentID)
 
         except ConflictingCredentialError:
             return ConflictingCredentialError(
