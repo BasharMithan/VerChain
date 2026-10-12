@@ -131,7 +131,7 @@ verchain.start()      # Start the P2P network; the API starts during initializat
 # or: verchain.cli.start()  # CLI entry point; CLI commands are being added
 ```
 
-API requests and the CLI entry point share the instance's `VerchainCommunication` services.
+The node's HTTP server is managed by `VerchainAPI`; API and CLI processing is handled by the `VerchainProcessor` service.
 
 ### Register a credential
 

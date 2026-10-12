@@ -1,33 +1,25 @@
 
 import time
 from pathlib import Path
-from pydantic_core import ValidationError
 
-from errors.blockErrors import DuplicateBlockError
-
-from models.constants import BOOTSTRAP_NODES
-from models.Models import Action, Block, Payload
-
-from utils.nodeStorageManager import NodeStorageManager
-from utils.blocks.blockManager import BlockManager
-from errors.holderValidationErrors import ConflictingCredentialError
-from errors.credentialErrors import DuplicateCredentialIDError
+from core.communication import VerchainAPI
 from services.ledger import Ledger
 from services.network import Network
+from services.processor import VerchainProcessor
+from utils.blocks.blockManager import BlockManager
+from utils.nodeStorageManager import NodeStorageManager
+from models.constants import BOOTSTRAP_NODES
 from models.network import NetworkContext
-from core.verchainCommunication import VerchainCommunication
+from models.Models import Document
 from cli.app import CLI
-
-from errors import (
-    LedgerCorruptError, InvalidChainError
-)
-
+from errors import LedgerCorruptError
+from utils.utility_function import normalizeLocalHost
 
 
 class Verchain:
     def __init__(self, title: str, host: str, port: int, isBootstrap: bool = False) -> None:
         self.title = title
-        self.host = host
+        self.host = normalizeLocalHost(host)
         self.port = port
         ledgerFilePath = Path(__file__).resolve().parents[2] / "storage" / f".ledger-{self.title}.json"
         # Packing the storage lists and sets to share it across the services and tools.
@@ -41,10 +33,6 @@ class Verchain:
             receivedLengths=self.receivedLengths,
             receivedLedgers=self.receivedLedgers,
         )
-
-        # The p2pnetwork only uses the local host: "127.0.0.1".
-        if self.host == "localhost":
-            self.host = "127.0.0.1"
 
         ledger_corrupt = False
         try:
@@ -74,7 +62,7 @@ class Verchain:
         # If ledger was corrupt or ledger indicated a need to sync, request chain sync.
         if ledger_corrupt or self.ledger.shouldRequestChain == True:
             try:
-                self.chainSync.request()
+                self.chainSync.requestChainSync()
             except Exception:
                 # Network may not be started yet; outbound connections will
                 # call chain sync when they connect.
@@ -84,65 +72,18 @@ class Verchain:
         if isBootstrap:
             BOOTSTRAP_NODES.append((self.host, self.port))
 
-        self.communication = VerchainCommunication(self)
-        self.cli = CLI(self)
-        self.communication.startAPI()
+        self.processor = VerchainProcessor(self)
+        self.api = VerchainAPI(self)
+        self.cli = CLI(self.processor)
+        self.api.startAPI()
 
     def start(self) -> None:
         """Join the peer-to-peer network after API startup during initialization."""
         self.network.start()
 
-    def requestChainSync(self) -> None:
-        "Triggers the chain sync request, cleans the local current local chain."
-        self.ledger.shouldRequestChain = True
-        self.receivedLedgers.clear()
-        self.chainSync.request()
-
-    def registerBlock(self, block: Block) -> Block | None | Exception:
-        "Registers a block on-chain."
-
-        try:
-            resultBlock: Block = self.blockManager.registerBlock(block)
-
-        except InvalidChainError:
-            # Request a chain sync and retry once. If the chain is still
-            # invalid after the retry, return an InvalidChainError instance
-            # so the caller can respond appropriately instead of letting
-            # the exception bubble up to the ASGI server.
-            self.requestChainSync()
-            time.sleep(0.2)
-            
-            resultBlock: Block = self.blockManager.registerBlock(block)
-
-        except DuplicateBlockError:
-            return DuplicateBlockError(block.data.chid)
-
-        except DuplicateCredentialIDError:
-            return DuplicateCredentialIDError(block.data.credential.documentID)
-
-        except ConflictingCredentialError:
-            return ConflictingCredentialError(
-                nationalNumber=block.data.user.nationalNumber,
-                existingName="",
-                incomingName=""
-            )
-
-        except ValidationError:
-            return ValidationError()
-
-        if self.blockManager.shouldBoradcast(block):
-            # Broadcasting a block to all connecting nodes.
-            self.network.broadcast(Payload(action=Action.BlockBroadcast.value, data=block), [])
-
-            # Adding the block to the seenBlocks set to prevent broadcast loop.
-            self.seenBlocks.add(block.data.chid)
-            return resultBlock
-
-        
-
-
 if __name__ == "__main__":
-    from models import Authority, User, Credential, CHID, Document
+    from models import Authority, User, Credential, CHID
+    from models.Models import Action, Block, Payload
 
     issuer = Authority(name="JPUF", businessID=3423)
 

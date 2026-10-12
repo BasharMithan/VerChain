@@ -217,8 +217,9 @@ class ChainSyncResponse(BaseModel):
     length: int
 
 
+from models.CLIModels import CLICommand
 
 
 class Payload(BaseModel):
-    action: str | Action
+    action: str | Action | CLICommand
     data: Any

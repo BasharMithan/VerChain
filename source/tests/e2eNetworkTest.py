@@ -74,7 +74,7 @@ def test_registered_block_propagates_to_directly_connected_peer(spawnPeer):
     _connect(peerA, peerB)
 
     block = _makeBlock("AB", nationalNumber=1001, documentID=1, businessID=10)
-    result = peerA.registerBlock(block)
+    result = peerA.processor.registerBlock(block)
 
     assert result is not None
     assert result.isMined()
@@ -96,7 +96,7 @@ def test_status_and_chain_agree_across_connected_peers(spawnPeer):
     _connect(peerA, peerB)
 
     block = _makeBlock("STATUS", nationalNumber=2002, documentID=2, businessID=20)
-    peerA.registerBlock(block)
+    peerA.processor.registerBlock(block)
     time.sleep(1.5)
 
     assert len(peerA.ledger.blocks) == len(peerB.ledger.blocks)
@@ -122,7 +122,7 @@ def test_verification_succeeds_on_peer_that_did_not_originate_block(spawnPeer):
         ),
         issuer=Authority(name="RemoteAuth", businessID=30),
     )
-    peerA.registerBlock(Block(data=chid))
+    peerA.processor.registerBlock(Block(data=chid))
     time.sleep(1.5)
 
     query = Query(user=chid.user, credential=chid.credential, issuer=chid.issuer)
@@ -143,7 +143,7 @@ def test_three_peer_mesh_all_receive_direct_broadcast(spawnPeer):
     _connect(peerB, peerC)
 
     block = _makeBlock("MESH", nationalNumber=4004, documentID=4, businessID=40)
-    peerB.registerBlock(block)
+    peerB.processor.registerBlock(block)
     time.sleep(2)
 
     for peer in (peerA, peerB, peerC):
@@ -157,14 +157,14 @@ def test_late_joining_peer_syncs_existing_chain(spawnPeer):
     peerA = spawnPeer("A")
     for i in range(3):
         block = _makeBlock(f"PRE{i}", nationalNumber=5000 + i, documentID=5 + i, businessID=50 + i)
-        peerA.registerBlock(block)
+        peerA.processor.registerBlock(block)
     assert len(peerA.ledger.blocks) == 4  # genesis + 3
 
     peerD = spawnPeer("D")
     assert len(peerD.ledger.blocks) == 1  # just its own genesis
 
     _connect(peerD, peerA)
-    peerD.requestChainSync()
+    peerD.chainSync.requestChainSync()
     time.sleep(2)
 
     assert len(peerD.ledger.blocks) == len(peerA.ledger.blocks)
@@ -184,7 +184,7 @@ def test_block_propagates_through_a_line_topology(spawnPeer):
     _connect(peerB, peerC)  # A and C are NOT directly connected
 
     block = _makeBlock("LINE", nationalNumber=6006, documentID=6, businessID=60)
-    peerA.registerBlock(block)
+    peerA.processor.registerBlock(block)
     time.sleep(2.5)  # one extra hop needs a bit more settle time
 
     assert len(peerC.ledger.blocks) == 2, "block should have relayed through B to reach C"
@@ -204,7 +204,7 @@ def test_mesh_relay_does_not_duplicate_or_loop(spawnPeer):
     _connect(peerB, peerC)
 
     block = _makeBlock("NOLOOP", nationalNumber=7007, documentID=7, businessID=70)
-    peerA.registerBlock(block)
+    peerA.processor.registerBlock(block)
     time.sleep(2.5)
 
     for peer in (peerA, peerB, peerC):

@@ -199,15 +199,16 @@ def test_request_sends_chain_sync_request_to_known_nodes(tmp_path):
     chain_sync = ChainSync(
         ledger=Ledger(filePath=tmp_path / ".ledger-sync-request.json"),
         network=network, # type: ignore
-        receivedLedgers=[],
+        receivedLedgers=[["stale-ledger"]],
         receivedLengths=[],
         me=self_meta,
     )
 
-    chain_sync.request()
+    chain_sync.ledger.shouldRequestChain = False
+    chain_sync.requestChainSync()
 
-
-
+    assert chain_sync.ledger.shouldRequestChain is True
+    assert chain_sync.receivedLedgers == []
     assert chain_sync.expectedResponses == len(network.all_nodes)
     assert len(network.sent_to_nodes) == 1
     payload, exclude = network.sent_to_nodes[0]

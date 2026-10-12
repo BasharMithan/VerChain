@@ -47,6 +47,12 @@ class ChainSync:
         }, exclude=[NodeStorageManager.metadataToNodeConnection(self.me, self.network.all_nodes)]) 
 
 
+    def requestChainSync(self) -> None:
+        """Mark the local chain for synchronization, clear stale responses, and request peers."""
+        self.ledger.shouldRequestChain = True
+        self.receivedLedgers.clear()
+        self.request()
+
 
     def receive(self, response: ChainSyncResponse) -> None:
         """Reads the chain sync response message, saves the received ledger with all other

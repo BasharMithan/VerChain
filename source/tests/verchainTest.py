@@ -2,7 +2,8 @@ from types import SimpleNamespace
 
 from cli.app import CLI
 from core.verchain import Verchain
-from core.verchainCommunication import VerchainCommunication
+from core.communication import VerchainAPI
+from services.processor import VerchainProcessor
 
 
 def test_initialization_starts_api_and_start_starts_network(monkeypatch):
@@ -21,12 +22,13 @@ def test_initialization_starts_api_and_start_starts_network(monkeypatch):
     monkeypatch.setattr("core.verchain.NodeStorageManager", lambda *args: object())
     monkeypatch.setattr("core.verchain.Network", FakeNetwork)
     monkeypatch.setattr(
-        VerchainCommunication,
+        VerchainAPI,
         "startAPI",
         lambda self: events.append("api"),
     )
 
     verchain = Verchain("Test", "localhost", 0)
+    assert verchain.host == "127.0.0.1"
     assert events == ["api"]
 
     verchain.start()
@@ -34,16 +36,30 @@ def test_initialization_starts_api_and_start_starts_network(monkeypatch):
     assert events == ["api", "network"]
 
 
-def test_cli_uses_verchain_start_and_shared_communication():
+def test_cli_uses_processor_to_start_node():
     events = []
-    communication = object()
-    verchain = SimpleNamespace(
-        communication=communication,
+    processor = SimpleNamespace(
         start=lambda: events.append("started"),
     )
 
-    cli = CLI(verchain)
+    cli = CLI(processor)
     cli.start()
 
-    assert cli.communication is communication
+    assert cli.processor is processor
     assert events == ["started"]
+
+
+def test_verchain_owns_processing_service(monkeypatch):
+    monkeypatch.setattr("core.verchain.Ledger", lambda path: SimpleNamespace(shouldRequestChain=False))
+    monkeypatch.setattr("core.verchain.BlockManager", lambda *args: object())
+    monkeypatch.setattr("core.verchain.NodeStorageManager", lambda *args: object())
+    monkeypatch.setattr(
+        "core.verchain.Network",
+        lambda *args: SimpleNamespace(metadata=object(), chainSharing=object()),
+    )
+    monkeypatch.setattr(VerchainAPI, "startAPI", lambda self: None)
+
+    verchain = Verchain("ProcessorTest", "localhost", 0)
+
+    assert isinstance(verchain.processor, VerchainProcessor)
+    assert verchain.cli.processor is verchain.processor

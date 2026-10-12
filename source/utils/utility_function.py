@@ -139,3 +139,24 @@ def getProjectVersion() -> str:
     versions = subprocess.run("git describe --tags --abbrev=0", capture_output=True, text=True)
     return versions.stdout.strip()
 
+
+
+from enum import Enum
+from typing import Any, Type, TypeVar
+
+E = TypeVar("E", bound=Enum)
+
+
+def listEnum(enum_class: Type[E]) -> list[Any]:
+    """Return the raw values of the Enum's members."""
+    return [member.value for member in enum_class]
+
+
+def enumValue(enum_class: Type[E], value: Any) -> E:
+    """Return the Enum member matching the given value."""
+    return enum_class(value)
+
+
+def normalizeLocalHost(host: str) -> str:
+    """Replace the local hostname alias with its IPv4 loopback address."""
+    return "127.0.0.1" if host == "localhost" else host

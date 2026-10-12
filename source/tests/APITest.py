@@ -1,16 +1,19 @@
+from types import SimpleNamespace
+
 import pytest
 import pymupdf
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from API.router import VerchainRouter
+from core.verchain import Verchain
 from services.ledger import Ledger
+from services.processor import VerchainProcessor
 from utils.blocks.blockManager import BlockManager
-from models.Models import Block, NodeMetadata, NodeConnectionType, User
-from errors import DuplicateBlockError, InvalidChainError
+from models.Models import NodeMetadata, NodeConnectionType
 
 
-class FakePeer:
+class FakePeer(Verchain):
     """Stand-in for Peer with a real Ledger/BlockManager but no p2p networking,
     so the API layer can be tested in isolation."""
 
@@ -19,24 +22,28 @@ class FakePeer:
         self.host = host
         self.port = port
         self.ledger = Ledger(filePath=ledgerPath)
-        self.blockManager = BlockManager(self.ledger, set())
+        self.seenBlocks = set()
+        self.blockManager = BlockManager(self.ledger, self.seenBlocks)
+
+        class FakeNetwork:
+            def __init__(self, blockManager):
+                self.blockManager = blockManager
+
+            def broadcastBlock(self, block):
+                return self.blockManager.shouldBoradcast(block)
+
+        self.network = FakeNetwork(self.blockManager)
+        self.processor = VerchainProcessor(self)
         self.me = NodeMetadata(
             name=title, nodeID="", host=host, port=port,
             connectionType=NodeConnectionType.outbound,
         )
 
-    def registerBlock(self, block: Block):
-        try:
-            return self.blockManager.registerBlock(block)
-        except (DuplicateBlockError, InvalidChainError):
-            return None
-
-
 @pytest.fixture
 def apiClient(tmp_path):
     fakePeer = FakePeer("APITestNode", "127.0.0.1", 9999, tmp_path / ".ledger-api-test.json")
     app = FastAPI()
-    app.include_router(VerchainRouter(fakePeer)) # type: ignore
+    app.include_router(VerchainRouter(fakePeer.processor)) # type: ignore
     return TestClient(app), fakePeer
 
 

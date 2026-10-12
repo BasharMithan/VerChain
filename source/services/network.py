@@ -2,7 +2,7 @@ from p2pnetwork.node import Node
 from typing import Callable
 import time
 
-from models.Models import NodeMetadata, Payload
+from models.Models import Block, NodeMetadata, Payload
 
 from utils.nodeStorageManager import NodeStorageManager
 from utils.networkUtils import NetworkCallbacks, buildNodeInformation
@@ -14,6 +14,7 @@ from services.ledger import Ledger
 from models.network import NetworkContext
 from models.Models import NodeConnectionType, DiscoverMessage, Action
 from configs.baseConfigs import defaultSettings
+from utils.utility_function import normalizeLocalHost
 
 
 
@@ -25,10 +26,8 @@ class Network(Node):
                  networkContext: NetworkContext) -> None:
         
         self.title = title
-        self.host = host
+        self.host = normalizeLocalHost(host)
         self.port = port
-
-        if self.host == "localhost": self.host = "127.0.0.1"
 
         self.nodeManager = nodeManager
         self.blockManager = blockManager
@@ -56,6 +55,16 @@ class Network(Node):
             message=Payload(action=Action.discover.value, data=DiscoverMessage(sender=self.metadata, toAll=toAll)),
             exclude=[]
         )
+
+    def broadcastBlock(self, block: Block) -> bool:
+        """Broadcast a newly registered block once to peers."""
+        if not self.blockManager.shouldBoradcast(block):
+            return False
+        self.broadcast(
+            message=Payload(action=Action.BlockBroadcast.value, data=block),
+            exclude=[],
+        )
+        return True
 
 
 
@@ -190,6 +199,4 @@ class Network(Node):
     def inbound_node_connected(self, node):
         self.networkCallbacks.inboundConnectionCallback(self.nodes_inbound)
         return super().inbound_node_connected(node)
-
-
 

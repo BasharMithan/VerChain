@@ -4,25 +4,17 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from typing import Annotated
 
-from core.verchain import Verchain
-from core.verchainCommunication import VerchainCommunication
 from models.APIModels import APIRegisterationRequest, VerificationRequest
 from models.Models import Response
 from errors.APIErrors import APIError
 from configs.handler import configs
-from services.documents import DocumentReceiver
-from configs.baseConfigs import CredentialConstraints
+from services.processor import VerchainProcessor
 
 
 class VerchainRouter(APIRouter):
-    def __init__(
-        self,
-        verchain: Verchain,
-        communication: VerchainCommunication | None = None,
-    ) -> None:
+    def __init__(self, processor: VerchainProcessor) -> None:
         super().__init__()
-        self.verchain = verchain
-        self.communication = communication or VerchainCommunication(verchain)
+        self.processor = processor
         self.settings = configs.load()
 
         self.add_api_route("/register", self.register, methods=["POST"], status_code=201)
@@ -57,14 +49,16 @@ class VerchainRouter(APIRouter):
             "credential.document": document,
         })
         try:
-            documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
-            receivedDocument = await documentReceiver.receive(uploadedFile=document, documentID=documentID)
+            receivedDocument = await self.processor.receiveDocument(
+                uploadedFile=document,
+                documentID=documentID,
+            )
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
 
         result = await run_in_threadpool(
-            self.communication.processBlockRegisterationRequest,
+            self.processor.processBlockRegisterationRequest,
             registerationRequest,
             receivedDocument,
         )
@@ -93,8 +87,10 @@ class VerchainRouter(APIRouter):
     ):
               
         try:
-            documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
-            receivedDocument = await documentReceiver.receive(uploadedFile=document, documentID=documentID)
+            receivedDocument = await self.processor.receiveDocument(
+                uploadedFile=document,
+                documentID=documentID,
+            )
         except ValueError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -108,7 +104,7 @@ class VerchainRouter(APIRouter):
         )
  
 
-        result: Response | APIError = self.communication.processVerificationRequest(payload)
+        result: Response | APIError = self.processor.processVerificationRequest(payload)
 
         if isinstance(result, APIError):
             raise HTTPException(
@@ -120,7 +116,7 @@ class VerchainRouter(APIRouter):
         
 
     def chain(self):
-        return self.communication.sendChain(node=self.verchain.me, blockManager=self.verchain.blockManager)
+        return self.processor.sendChain()
 
     def status(self):
-        return self.communication.sendNodeStatus()
+        return self.processor.sendNodeStatus()
