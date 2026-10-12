@@ -121,6 +121,18 @@ python main.py
 
 `main.py` starts a node on P2P port `8000`; its HTTP API listens on the P2P port plus 10000 (`http://localhost:18000`, Swagger UI at `/docs`). The first start creates and mines the genesis block in `storage/`.
 
+In Python code, create a `Verchain` instance and choose either startup entry point:
+
+```python
+from core.verchain import Verchain
+
+verchain = Verchain("Blockchain", "localhost", 8000, isBootstrap=False)
+verchain.start()      # Start the P2P network; the API starts during initialization
+# or: verchain.cli.start()  # CLI entry point; CLI commands are being added
+```
+
+API requests and the CLI entry point share the instance's `VerchainCommunication` services.
+
 ### Register a credential
 
 The credential is uploaded as a PDF. Only hashes are stored on-chain.
@@ -152,10 +164,6 @@ A changed file or a wrong `documentID` returns `404` (`Credential-not-found`). S
 
 `settings.yml` controls the mining difficulty, the upload limit and the `performance` mode. `SAFE` re-validates the whole chain on every insert; `FAST` validates only the new block.
 
-## Development
-
-- Install dependencies: pip install -r requirements.txt (or use pip install -e .)
-- Run tests (if any): pytest
 
 ## Contributing
 

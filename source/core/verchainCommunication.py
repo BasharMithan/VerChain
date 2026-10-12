@@ -1,10 +1,19 @@
+from __future__ import annotations
+
+import threading
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from models.APIModels import (VerificationRequest, NodeStatus,
                                      ChainModel, APIRegisterationRequest,
                                      )
 
 from pydantic_core import ValidationError
 
-from services.peer import Peer
 from models.Models import NodeMetadata, Credential, Authority, Block, CHID, Query, Response, User, Document
 from services.verifier import Verifier
 from utils.blocks.blockManager import BlockManager
@@ -17,26 +26,60 @@ from errors.credentialErrors import DuplicateCredentialIDError
 from validation.inputValidation import InputValidation
 from configs.baseConfigs import CredentialConstraints
 
+if TYPE_CHECKING:
+    from core.verchain import Verchain
 
 
-class APICommunication:
-    "Responsable for responding to API messages and nalysing the incoming data from the API"
-    def __init__(self, peer: Peer) -> None:
-        self.peer = peer
+class VerchainCommunication:
+    "Handles communication requests from API endpoints and CLI commands."
+    def __init__(self, verchain: Verchain) -> None:
+        self.verchain = verchain
         self.verifier = Verifier()
-        self.inputValidation = InputValidation(self.peer.ledger)
+        self.inputValidation = InputValidation(self.verchain.ledger)
         self.documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
-        
 
+    def startAPI(self) -> None:
+        app = self.buildAPI()
+        thread = threading.Thread(
+            target=uvicorn.run,
+            args=(app,),
+            kwargs={
+                "host": self.verchain.host,
+                "port": self.verchain.port + 10000,
+                "log_level": "warning",
+            },
+            daemon=True,
+        )
+        thread.start()
 
-    
+    def buildAPI(self) -> FastAPI:
+        from API.router import VerchainRouter
+
+        app = FastAPI(title=f"Verchain - {self.verchain.title}")
+        apiPort = self.verchain.port + 10000
+        apiOrigin = f"http://{self.verchain.host}:{apiPort}"
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[
+                apiOrigin,
+                f"http://localhost:{apiPort}",
+                f"http://127.0.0.1:{apiPort}",
+                "*",
+            ],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        app.include_router(VerchainRouter(self.verchain, self))
+        staticDir = Path(__file__).resolve().parents[1] / "API" / "static"
+        app.mount("/console", StaticFiles(directory=staticDir, html=True), name="Console")
+        return app
+
     def processVerificationRequest(self, verificationRequest: VerificationRequest) -> Response | APIError:
-
-
         # Looping over the local chain to locate the block that contains all the information.
-        user = self.peer.ledger.findUser(verificationRequest.userID, verificationRequest.user)
-        credential = self.peer.ledger.findCredential(verificationRequest.document.documentHash)
-        issuer = self.peer.ledger.findIssuer(verificationRequest.issuerID, verificationRequest.issuer)
+        user = self.verchain.ledger.findUser(verificationRequest.userID, verificationRequest.user)
+        credential = self.verchain.ledger.findCredential(verificationRequest.document.documentHash)
+        issuer = self.verchain.ledger.findIssuer(verificationRequest.issuerID, verificationRequest.issuer)
 
 
         if not user:
@@ -52,16 +95,12 @@ class APICommunication:
 
         # execute only if the User, Credential, and the Authority are stored on-chain.
         query = Query(user=user, credential=credential, issuer=issuer)
-        return self.verifier.check(query, self.peer.ledger.blocks)
+        return self.verifier.check(query, self.verchain.ledger.blocks)
         
-
 
 
     def processBlockRegisterationRequest(self, registerationRequest: APIRegisterationRequest, document: Document) -> Block | APIError:
         "Takes the `RegisterationRequest` received from the API, builds the block and registers it on the chain."
-
-
-
         # Converting the data models from API models to the data models that are recognized by the network.
         try:
             user = User(
@@ -111,7 +150,7 @@ class APICommunication:
 
         
         try:
-            result: Block | Exception | None = self.peer.registerBlock(block)
+            result: Block | Exception | None = self.verchain.registerBlock(block)
         except (DuplicateBlockError, DuplicateCredentialIDError, InvalidChainError, ConflictingCredentialError, ValidationError) as error:
             result = error
         if result is None:
@@ -141,10 +180,10 @@ class APICommunication:
     def sendNodeStatus(self) -> NodeStatus:
         "Returns the NodeStatus model to the API router."
 
-        name: str = self.peer.title
-        host, port = self.peer.host, self.peer.port
+        name: str = self.verchain.title
+        host, port = self.verchain.host, self.verchain.port
 
-        ledger: list = self.peer.ledger.blocks
+        ledger: list = self.verchain.ledger.blocks
         cv = ChainValidation(ledger)
 
         chainValidity: bool = cv.validate()
@@ -163,5 +202,3 @@ class APICommunication:
     @staticmethod
     def sendChain(node: NodeMetadata, blockManager: BlockManager) -> ChainModel:
         return ChainModel(sender=node, chain=blockManager.ledger.blocks)
-
-

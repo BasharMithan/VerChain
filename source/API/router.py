@@ -1,24 +1,38 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from typing import Annotated
 
-from services.peer import Peer
+from core.verchain import Verchain
+from core.verchainCommunication import VerchainCommunication
 from models.APIModels import APIRegisterationRequest, VerificationRequest
 from models.Models import Response
-from API.APIServices import APICommunication
 from errors.APIErrors import APIError
 from configs.handler import configs
 from services.documents import DocumentReceiver
 from configs.baseConfigs import CredentialConstraints
 
 
-def buildRouter(peer: Peer) -> APIRouter:
-    router = APIRouter()
-    communication = APICommunication(peer)
-    settings = configs.load()
+class VerchainRouter(APIRouter):
+    def __init__(
+        self,
+        verchain: Verchain,
+        communication: VerchainCommunication | None = None,
+    ) -> None:
+        super().__init__()
+        self.verchain = verchain
+        self.communication = communication or VerchainCommunication(verchain)
+        self.settings = configs.load()
 
-    @router.post("/register", status_code=201)
+        self.add_api_route("/register", self.register, methods=["POST"], status_code=201)
+        self.add_api_route("/credential-constraints", self.credentialConstraints, methods=["GET"])
+        self.add_api_route("/check", self.check, methods=["POST"])
+        self.add_api_route("/chain", self.chain, methods=["GET"])
+        self.add_api_route("/status", self.status, methods=["GET"])
+
     async def register(
+        self,
         userName: Annotated[str, Form(alias="user.name")],
         nationalNumber: Annotated[int, Form(alias="user.nationalNumber")],
         phone: Annotated[int, Form(alias="user.phone")],
@@ -50,7 +64,7 @@ def buildRouter(peer: Peer) -> APIRouter:
 
 
         result = await run_in_threadpool(
-            communication.processBlockRegisterationRequest,
+            self.communication.processBlockRegisterationRequest,
             registerationRequest,
             receivedDocument,
         )
@@ -60,23 +74,23 @@ def buildRouter(peer: Peer) -> APIRouter:
         
         return result
 
-    @router.get("/credential-constraints")
-    def credentialConstraints():
+    def credentialConstraints(self):
         return {
-            "maxUploadSize": settings.credentials.maxUploadSize,
+            "maxUploadSize": self.settings.credentials.maxUploadSize,
             "supportedFormats": sorted(
-                item.lower() for item in settings.credentials.supportedCredentialFormats
+                item.lower() for item in self.settings.credentials.supportedCredentialFormats
             ),
         }
 
-    @router.post("/check")
     async def check(
-              username: Annotated[str, Form(alias="username")],
-              userID: Annotated[int, Form(alias="userID")],
-              document: Annotated[UploadFile, File(alias="document")],
-              documentID: Annotated[int, Form(alias="documentID")],
-              issuer: Annotated[str, Form(alias="issuer")],
-              issuerID: Annotated[int, Form(alias="issuerID")]):
+        self,
+        username: Annotated[str, Form(alias="username")],
+        userID: Annotated[int, Form(alias="userID")],
+        document: Annotated[UploadFile, File(alias="document")],
+        documentID: Annotated[int, Form(alias="documentID")],
+        issuer: Annotated[str, Form(alias="issuer")],
+        issuerID: Annotated[int, Form(alias="issuerID")],
+    ):
               
         try:
             documentReceiver = DocumentReceiver(constraints=CredentialConstraints())
@@ -94,7 +108,7 @@ def buildRouter(peer: Peer) -> APIRouter:
         )
  
 
-        result: Response | APIError = communication.processVerificationRequest(payload)
+        result: Response | APIError = self.communication.processVerificationRequest(payload)
 
         if isinstance(result, APIError):
             raise HTTPException(
@@ -105,14 +119,8 @@ def buildRouter(peer: Peer) -> APIRouter:
         return result
         
 
-    @router.get("/chain")
-    def chain():
-        return communication.sendChain(node=peer.me, blockManager=peer.blockManager)
+    def chain(self):
+        return self.communication.sendChain(node=self.verchain.me, blockManager=self.verchain.blockManager)
 
-    @router.get("/status")
-    def status():
-        return communication.sendNodeStatus()
-
-
-
-    return router
+    def status(self):
+        return self.communication.sendNodeStatus()

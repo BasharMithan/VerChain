@@ -2,7 +2,7 @@ import pytest
 from models.Models import Block, CHID, User, Authority, Credential, Document
 from utils.blocks.miner import Miner
 from services.ledger import Ledger
-from services.peer import Peer
+from core.verchain import Verchain
 
 
 @pytest.fixture
@@ -51,4 +51,4 @@ def fulledger(tempLedgerPath) -> Ledger:
 
 @pytest.fixture
 def peer():
-    Peer("Testing", "localhost", 121212)
+    Verchain("Testing", "localhost", 121212)

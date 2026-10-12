@@ -3,7 +3,7 @@ import pymupdf
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from API.router import buildRouter
+from API.router import VerchainRouter
 from services.ledger import Ledger
 from utils.blocks.blockManager import BlockManager
 from models.Models import Block, NodeMetadata, NodeConnectionType, User
@@ -36,7 +36,7 @@ class FakePeer:
 def apiClient(tmp_path):
     fakePeer = FakePeer("APITestNode", "127.0.0.1", 9999, tmp_path / ".ledger-api-test.json")
     app = FastAPI()
-    app.include_router(buildRouter(fakePeer)) # type: ignore
+    app.include_router(VerchainRouter(fakePeer)) # type: ignore
     return TestClient(app), fakePeer
 
 

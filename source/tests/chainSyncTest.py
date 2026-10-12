@@ -22,7 +22,7 @@ from services.ledger import Ledger
 from utils.blocks.miner import Miner
 from utils.nodeStorageManager import NodeStorageManager
 from services.network import Network
-from services.peer import Peer
+from core.verchain import Verchain
 
 
 class FakeNodeConnection:
@@ -52,8 +52,8 @@ class FakeNetwork:
     def send_to_node(self, node, payload):
         self.sent_to_node.append((node, payload))
 
-def peer() -> Peer:
-    return Peer("Testing", "localhost", 121212)
+def peer() -> Verchain:
+    return Verchain("Testing", "localhost", 121212)
 
 
 def test_is_connected_returns_true_for_existing_connection():

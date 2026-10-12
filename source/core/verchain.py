@@ -1,15 +1,12 @@
 
-import json, time, threading, uvicorn
+import time
 from pathlib import Path
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic_core import ValidationError
 
 from errors.blockErrors import DuplicateBlockError
 
 from models.constants import BOOTSTRAP_NODES
-from models.Models import (Action, Block, NodeMetadata, Payload, Document)
+from models.Models import Action, Block, Payload
 
 from utils.nodeStorageManager import NodeStorageManager
 from utils.blocks.blockManager import BlockManager
@@ -18,16 +15,17 @@ from errors.credentialErrors import DuplicateCredentialIDError
 from services.ledger import Ledger
 from services.network import Network
 from models.network import NetworkContext
-from configs.baseConfigs import defaultSettings
+from core.verchainCommunication import VerchainCommunication
+from cli.app import CLI
 
 from errors import (
-    LedgerCorruptError, LedgerNotFoundError, InvalidChainError
-    )
+    LedgerCorruptError, InvalidChainError
+)
 
 
 
-class Peer:
-    def __init__(self, title: str, host: str, port: int, bootstrap: bool = False) -> None:
+class Verchain:
+    def __init__(self, title: str, host: str, port: int, isBootstrap: bool = False) -> None:
         self.title = title
         self.host = host
         self.port = port
@@ -37,8 +35,7 @@ class Peer:
         self.receivedLengths: list = []
         self.seenBlocks = set()
 
-        # Use the instance's shared lists so Network/ChainSync update the
-        # same collections that Peer methods reference.
+        # Share the collections used by Network and ChainSync with Verchain.
         networkContext = NetworkContext(
             seenBlocks=self.seenBlocks,
             receivedLengths=self.receivedLengths,
@@ -84,68 +81,22 @@ class Peer:
                 pass
 
         # A bootstrap node is a node that all nodes should connect to it on the start.
-        if bootstrap:
+        if isBootstrap:
             BOOTSTRAP_NODES.append((self.host, self.port))
 
-        self.startAPI()
+        self.communication = VerchainCommunication(self)
+        self.cli = CLI(self)
+        self.communication.startAPI()
 
-    def startNetwork(self) -> None:
+    def start(self) -> None:
+        """Join the peer-to-peer network after API startup during initialization."""
         self.network.start()
-
-    def stopNetwork(self) -> None:
-        self.network.stop()
-
-    def connect(self, node: NodeMetadata, host: str = "", port: int = 0) -> None:
-        "Connects to a specific node by NodeMetadata, or host and port."
-
-        self.network.connect(node=node, host=host, port=port)
-
 
     def requestChainSync(self) -> None:
         "Triggers the chain sync request, cleans the local current local chain."
         self.ledger.shouldRequestChain = True
         self.receivedLedgers.clear()
         self.chainSync.request()
-
-    
-    def startAPI(self) -> None:
-            app = self.buildAPI()
-            thread = threading.Thread(
-                target=uvicorn.run,
-                args=(app,),
-                kwargs={
-                    "host": self.host,
-                    "port": self.port + 10000,
-                    "log_level": "warning"
-                },
-                daemon=True
-            )
-
-            thread.start()
-
-
-
-    def buildAPI(self) -> FastAPI:
-        from API.router import buildRouter
-        app = FastAPI(title=f"Peer Node - {self.title}")
-        # Allow the console UI (and other local origins) to call the API.
-        # Permit the exact API origin and localhost variants so browser hostname
-        # mismatches (localhost vs 127.0.0.1) don't cause CORS failures.
-        api_origin = f"http://{self.host}:{self.port + 10000}"
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=[api_origin, "http://localhost:" + str(self.port + 10000), "http://127.0.0.1:" + str(self.port + 10000), "*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-        app.include_router(buildRouter(self))
-
-        staticDir = Path(__file__).resolve().parents[1] / "API" / "static"
-        app.mount("/console", StaticFiles(directory=staticDir, html=True), name="Console")
-        return app
-
-    
 
     def registerBlock(self, block: Block) -> Block | None | Exception:
         "Registers a block on-chain."
@@ -191,7 +142,7 @@ class Peer:
 
 
 if __name__ == "__main__":
-    from models import Authority, User, Credential, CHID
+    from models import Authority, User, Credential, CHID, Document
 
     issuer = Authority(name="JPUF", businessID=3423)
 
@@ -204,11 +155,11 @@ if __name__ == "__main__":
 
 
     time.sleep(0.1)
-    bashar     = Peer("Bashar",     "localhost", 5001)
-    bilal      = Peer("Bilal",      "localhost", 5005)
+    bashar     = Verchain("Bashar",     "localhost", 5001)
+    bilal      = Verchain("Bilal",      "localhost", 5005)
    
 
     time.sleep(0.3)
 
-    bashar.startNetwork()        
-    bilal.startNetwork()
+    bashar.start()
+    bilal.start()

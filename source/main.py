@@ -1,11 +1,10 @@
-from services.peer import Peer
-from configs import settings
+from core.verchain import Verchain
 
 
 
 def main() -> None:
-    Blockchain = Peer("Blockchain", "localhost", 8000)
-    Blockchain.startNetwork()
+    verchain = Verchain("Blockchain", "localhost", 8000)
+    verchain.start()
 
 
 

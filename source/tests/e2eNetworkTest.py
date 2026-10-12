@@ -5,7 +5,7 @@ import itertools
 
 import pytest
 
-from services.peer import Peer
+from core.verchain import Verchain
 from models.Models import Authority, Block, CHID, Credential, Document, User
 
 
@@ -22,33 +22,33 @@ def _freePortBlock() -> int:
 
 @pytest.fixture
 def spawnPeer():
-    """Factory fixture: spawns a real Peer with a unique title/port, starts its
+    """Factory fixture: spawns a real Verchain node with a unique title/port, starts its
     network thread, and tears it down (network stop + ledger file cleanup) after."""
     spawned = []
 
-    def _spawn(name: str) -> Peer:
+    def _spawn(name: str) -> Verchain:
         uniqueTitle = f"{name}-{uuid.uuid4().hex[:8]}"
         port = _freePortBlock()
-        peer = Peer(uniqueTitle, "127.0.0.1", port)
-        peer.startNetwork()
-        spawned.append(peer)
-        return peer
+        verchain = Verchain(uniqueTitle, "127.0.0.1", port)
+        verchain.network.start()
+        spawned.append(verchain)
+        return verchain
 
     yield _spawn
 
-    for peer in spawned:
+    for verchain in spawned:
         try:
-            peer.stopNetwork()
+            verchain.network.stop()
         except Exception:
             pass
         try:
-            peer.ledger.filePath.unlink(missing_ok=True)
+            verchain.ledger.filePath.unlink(missing_ok=True)
         except Exception:
             pass
 
 
 @pytestmark
-def _connect(a: Peer, b: Peer, settle: float = 1.0) -> None:
+def _connect(a: Verchain, b: Verchain, settle: float = 1.0) -> None:
     """Connects `a` outbound to `b`, then waits for the handshake to settle."""
     a.network.connect_with_node(host=b.host, port=b.port)
     time.sleep(settle)
