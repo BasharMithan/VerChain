@@ -152,10 +152,6 @@ A changed file or a wrong `documentID` returns `404` (`Credential-not-found`). S
 
 `settings.yml` controls the mining difficulty, the upload limit and the `performance` mode. `SAFE` re-validates the whole chain on every insert; `FAST` validates only the new block.
 
-## Development
-
-- Install dependencies: pip install -r requirements.txt (or use pip install -e .)
-- Run tests (if any): pytest
 
 ## Contributing
 
@@ -167,9 +163,9 @@ Specify the project license in LICENSE file.
 
 ## Contact
 
-Maintainer: Bashar Mithan Repository: [https://github.com/BasharMithan/Verchain](https://github.com/BasharMithan/Verchain)
+- Maintainer: Bashar Mithan
+- Contact email: basharmithan@gmail.com
 
 ## To be added
 
 - System CLI.
-- Image input handling
